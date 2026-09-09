@@ -11,9 +11,9 @@ import java.util.Set;
  */
 public enum StatusOcorrencia {
 
-    RESOLVIDA("Resolvida"),
+    ABERTA("Aberta"),
     EM_TRATATIVA("Em tratativa"),
-    ABERTA("Aberta");
+    RESOLVIDA("Resolvida");
 
     private final String descricao;
 
