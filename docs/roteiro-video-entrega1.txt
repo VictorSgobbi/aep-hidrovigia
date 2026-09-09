@@ -1,0 +1,241 @@
+===============================================================================
+  HIDROVIGIA - ROTEIRO DO VIDEO DE DEMONSTRACAO
+  AEP 2026.2 | 6o Semestre | Engenharia de Software | ODS 6
+===============================================================================
+
+  PRIMEIRA ENTREGA
+  Duracao exigida pelo edital: 2 a 3 minutos
+  Duracao alvo deste roteiro:  2min50s
+
+  Equipe:
+    Victor Sgobbi ....... Bloco 1 - Problema e ODS
+    Bruno ............... Bloco 2 - Projeto inicial da solucao
+    Leonardo ............ Bloco 3 - PoC funcionando
+
+  O edital exige que o video apresente quatro itens. Cada bloco cobre um:
+    [x] O problema escolhido ................ Bloco 1
+    [x] O ODS atendido ...................... Bloco 1
+    [x] O projeto inicial da solucao ........ Bloco 2
+    [x] A primeira versao funcional da PoC .. Bloco 3
+
+
+===============================================================================
+  ANTES DE GRAVAR - CHECKLIST
+===============================================================================
+
+  AMBIENTE
+    [ ] docker compose up -d               (MongoDB no ar)
+    [ ] mvn spring-boot:run                (carga de demonstracao carregada)
+    [ ] Swagger aberto:  http://localhost:8080/swagger-ui.html
+    [ ] Mongo Express:   http://localhost:8081
+        (subir com: docker compose --profile ferramentas up -d)
+    [ ] Relatorio de cobertura aberto em outra aba:
+        target/site/jacoco/index.html
+
+  MATERIAL DE APOIO
+    [ ] Slide 1 - titulo "HidroVigia", os tres nomes, selo do ODS 6
+    [ ] Slide 2 - diagrama de camadas (copiar do README)
+    [ ] Slide 3 - hierarquia de parametros (copiar do README)
+
+  HIGIENE DA GRAVACAO
+    [ ] Fechar notificacoes do Windows, e-mail, WhatsApp e Teams
+    [ ] Fechar qualquer aba com dado pessoal ou credencial
+    [ ] Aumentar a fonte do editor e do navegador (Ctrl + "+")
+    [ ] Gravar em 1080p
+    [ ] ENSAIAR O BLOCO 3 DUAS VEZES - e a parte ao vivo, nao pode travar
+    [ ] Testar o microfone com 10 segundos de gravacao
+
+
+===============================================================================
+  BLOCO 1 - VICTOR - 0:00 a 0:58 - PROBLEMA E ODS
+===============================================================================
+
+  TELA: Slide 1 (abertura), depois Slide do ODS 6.
+
+  FALA:
+
+    Ola! Somos Victor, Bruno e Leonardo, do sexto semestre de Engenharia
+    de Software. Nossa Prova de Conceito se chama HidroVigia.
+
+    O problema e este: municipios pequenos e sistemas comunitarios --
+    pocos de escolas rurais, cisternas, associacoes de moradores -- sao
+    obrigados por lei a monitorar a potabilidade da agua que distribuem.
+    So que, na pratica, esse controle e feito em planilha e caderno de
+    campo.
+
+    O resultado e sempre o mesmo: uma analise fora do padrao demora dias
+    para virar acao. O laudo chega, e arquivado, e a agua continua sendo
+    distribuida enquanto ninguem cruza aquele resultado com o limite
+    legal nem cobra providencia de alguem com nome e prazo.
+
+    E exatamente esse intervalo entre DETECTAR e AGIR que a nossa solucao
+    fecha.
+
+    [TROCAR PARA O SLIDE DO ODS 6]
+
+    Isso nos alinha ao ODS 6 -- Agua Potavel e Saneamento -- nas metas
+    6.1 e 6.3. E o alinhamento nao e retorico: as regras de negocio do
+    sistema sao a propria norma. A Portaria 888 de 2021, que define o
+    padrao de potabilidade brasileiro.
+
+  DICA: fale a frase "detectar e agir" com pausa antes e depois. E a
+        frase que resume o projeto inteiro.
+
+
+===============================================================================
+  BLOCO 2 - BRUNO - 0:58 a 1:52 - PROJETO INICIAL DA SOLUCAO
+===============================================================================
+
+  TELA: Slide de camadas -> Slide da hierarquia -> IDE com a classe
+        ParametroPotabilidade -> Mongo Express mostrando as colecoes.
+
+  FALA:
+
+    O projeto da solucao tem quatro camadas: API, servicos, repositorios
+    e dominio, com a dependencia sempre apontando para dentro. O pacote
+    de dominio nao depende do Spring, o que deixa as regras de
+    potabilidade testaveis sem subir a aplicacao.
+
+    [TROCAR PARA O SLIDE DA HIERARQUIA]
+
+    O coracao e esta hierarquia: cada forma de limite da norma virou uma
+    classe. Faixa, para pH e cloro residual. Maximo, para turbidez e
+    nitrato. E Ausencia, para E. coli, onde qualquer contagem diferente
+    de zero reprova. A avaliacao e polimorfica -- nao existe switch por
+    codigo de parametro em lugar nenhum.
+
+    [TROCAR PARA O MONGO EXPRESS]
+
+    No banco usamos MongoDB, com tres colecoes: pontos de monitoramento,
+    analises e ocorrencias. Todas com subdocumentos aninhados e
+    relacionamento por identificador.
+
+    E reparem num detalhe: o limite legal fica gravado dentro de cada
+    parametro medido. Norma muda, e a analise de hoje precisa continuar
+    auditavel amanha.
+
+  DICA: no Mongo Express, deixe um documento da colecao "analises" ja
+        expandido antes de gravar, mostrando o array "parametros".
+
+
+===============================================================================
+  BLOCO 3 - LEONARDO - 1:52 a 2:50 - POC FUNCIONANDO
+===============================================================================
+
+  TELA: Swagger em tela cheia. ESTA PARTE E AO VIVO.
+
+  FALA E ACOES:
+
+    Agora a PoC rodando. Aqui esta a API no Swagger, com o MongoDB no
+    Docker ao lado.
+
+    Vou registrar uma coleta no poco da escola rural: E. coli em 14 UFC
+    e cloro residual em 0,05.
+
+    >>> ACAO: POST /api/analises com o corpo abaixo <<<
+
+    O sistema devolve o veredito parametro a parametro: E. coli
+    detectado, exigida ausencia. Cloro abaixo do minimo de 0,2.
+
+    E olhem aqui -- sem eu fazer mais nada, a ocorrencia ja foi aberta.
+
+    >>> ACAO: GET /api/ocorrencias <<<
+
+    Gravidade critica, porque o pior risco da amostra e microbiologico,
+    com prazo de 24 horas e o limite legal que foi aplicado.
+
+    >>> ACAO: POST /api/ocorrencias/{id}/tratativas <<<
+
+    Registro a tratativa, a ocorrencia avanca de estado, e o painel de
+    conformidade atualiza.
+
+    >>> ACAO: GET /api/painel/conformidade <<<
+    >>> ACAO: trocar para a aba do relatorio JaCoCo <<<
+
+    E os testes: um unico comando roda a suite e mede a cobertura, com o
+    build travado em 70 por cento.
+
+    Essa e a primeira versao funcional do HidroVigia. Obrigado!
+
+
+  -----------------------------------------------------------------------
+  CORPO DA REQUISICAO - deixe copiado na area de transferencia
+  -----------------------------------------------------------------------
+
+  POST /api/analises
+
+  {
+    "codigoPonto": "PMA-001",
+    "coletor": "Tecnico Bruno",
+    "coletadoEm": "2026-09-01T10:00:00Z",
+    "leituras": [
+      { "codigo": "ECOLI", "valor": 14 },
+      { "codigo": "CRL",   "valor": 0.05 },
+      { "codigo": "PH",    "valor": 7.1 },
+      { "codigo": "TURB",  "valor": 6.2 }
+    ]
+  }
+
+  Resposta esperada: 201, com "conforme": false e dois parametros
+  reprovados (ECOLI e CRL).
+
+
+  -----------------------------------------------------------------------
+  CORPO DA TRATATIVA
+  -----------------------------------------------------------------------
+
+  POST /api/ocorrencias/{id}/tratativas
+
+  {
+    "acao": "Ponto isolado da rede e recloracao do reservatorio",
+    "por": "Leonardo"
+  }
+
+  Resposta esperada: 200, com "status": "EM_TRATATIVA".
+
+
+===============================================================================
+  DISTRIBUICAO DO TEMPO
+===============================================================================
+
+  Bloco   Quem        Tempo    Item do edital
+  -----   ---------   ------   ------------------------------------------
+    1     Victor      0:58     Problema escolhido + ODS atendido
+    2     Bruno       0:54     Projeto inicial da solucao
+    3     Leonardo    0:58     Primeira versao funcional da PoC
+                      -----
+                      2:50
+
+  SE ESTOURAR 3:00, corte nesta ordem:
+
+    1. O trecho do JaCoCo no Bloco 3.
+       Cobertura e criterio da nota, mas NAO e item obrigatorio do video
+       nesta entrega.
+
+    2. A passagem pelo Mongo Express no Bloco 2.
+       Os slides ja mostram a modelagem.
+
+    3. A frase sobre o limite gravado dentro do parametro (Bloco 2).
+
+  NAO CORTE, em hipotese alguma:
+    - A definicao do problema (Bloco 1)
+    - A mencao explicita ao ODS 6 (Bloco 1)
+    - A execucao do POST /api/analises e a ocorrencia sendo aberta
+      (Bloco 3) -- e a prova de que a PoC funciona
+
+
+===============================================================================
+  DEPOIS DE GRAVAR
+===============================================================================
+
+  [ ] Editar e conferir a duracao final (entre 2:00 e 3:00)
+  [ ] Subir no YouTube como NAO LISTADO
+  [ ] Colar o link na secao "Identificacao" do README.md
+  [ ] Colar o link no Modelo de Entrega do professor
+  [ ] Conferir que o audio esta audivel do inicio ao fim
+  [ ] Conferir que nenhum dado pessoal aparece na tela
+
+
+===============================================================================
+  Ultima atualizacao: 09/09/2026
+===============================================================================
