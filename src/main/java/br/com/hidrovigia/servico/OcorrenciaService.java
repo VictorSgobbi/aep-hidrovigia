@@ -40,12 +40,20 @@ public class OcorrenciaService {
     /**
      * Abre a ocorrencia correspondente a uma analise reprovada.
      *
-     * @throws RegraNegocioException se a analise estiver conforme
+     * @throws RegraNegocioException se a analise estiver conforme ou se ja
+     *                               existir ocorrencia aberta para ela
      */
     public Ocorrencia abrirPara(Analise analise) {
         if (analise.conforme()) {
             throw new RegraNegocioException(
                     "Analise " + analise.getId() + " esta conforme e nao gera ocorrencia");
+        }
+        // Cada analise reprovada gera exatamente uma ocorrencia. A checagem
+        // aqui devolve 409 em vez de deixar o indice unico estourar como 500;
+        // o indice continua sendo a garantia real sob concorrencia.
+        if (repositorio.findByAnaliseId(analise.getId()).isPresent()) {
+            throw new RegraNegocioException(
+                    "Analise " + analise.getId() + " ja possui ocorrencia aberta");
         }
 
         List<ParametroViolado> violados = new ArrayList<>();

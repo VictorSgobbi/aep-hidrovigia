@@ -33,7 +33,13 @@ public class Ocorrencia {
     @Id
     private String id;
 
-    @Indexed
+    /**
+     * Uma analise reprovada gera exatamente uma ocorrencia. O indice unico e o
+     * que sustenta essa relacao 1:0..1 — sem ele, duas chamadas concorrentes
+     * abririam duas ocorrencias para a mesma analise e
+     * {@code findByAnaliseId}, que devolve {@code Optional}, passaria a falhar.
+     */
+    @Indexed(unique = true)
     private String analiseId;
 
     @Indexed
