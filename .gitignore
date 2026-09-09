@@ -1,0 +1,37 @@
+# Build
+target/
+!.mvn/wrapper/maven-wrapper.jar
+build/
+out/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+nbproject/
+.apt_generated/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs e temporários
+*.log
+logs/
+*.pid
+*.tmp
+
+# Segredos e configuração local
+.env
+.env.local
+application-local.yml
+application-local.properties
+
+# Dados do MongoDB montados localmente
+docker/dados-mongo/
