@@ -157,7 +157,7 @@ class OcorrenciaTest {
     @DisplayName("exige analise persistida e classificador informado")
     void exigePreCondicoes() {
         Analise semId = Analise.registrar(Fixtures.pontoPersistido(), "Tecnico",
-                Instant.now().minus(1, ChronoUnit.HOURS),
+                Fixtures.REFERENCIA.minus(1, ChronoUnit.HOURS),
                 Fixtures.parametrosComViolacaoCritica());
 
         assertThatThrownBy(() -> Ocorrencia.abrir(semId,

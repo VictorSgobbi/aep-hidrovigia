@@ -1,7 +1,9 @@
 package br.com.hidrovigia;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,10 +27,24 @@ import br.com.hidrovigia.dominio.ponto.TipoFonte;
  *
  * <p>Concentrar as montagens aqui evita repetir dez linhas de setup em cada
  * classe de teste e deixa visivel o que cada cenario realmente muda.
+ *
+ * <p>Todas as datas derivam de {@link #REFERENCIA}, um instante fixo, e nunca
+ * de {@code Instant.now()}: fixture ancorada no relogio da maquina produz
+ * objetos diferentes a cada execucao e e a origem tipica de teste
+ * intermitente. Quem precisa de "agora" injeta um {@code Clock} fixo derivado
+ * desta constante.
  */
 public final class Fixtures {
 
     public static final CatalogoParametros CATALOGO = CatalogoParametros.padraoBrasileiro();
+
+    /** Instante de referencia de toda a suite. */
+    public static final Instant REFERENCIA = Instant.parse("2026-01-15T09:00:00Z");
+
+    /** Relogio parado em {@link #REFERENCIA}, para injetar onde couber. */
+    public static Clock relogioFixo() {
+        return Clock.fixed(REFERENCIA, ZoneOffset.UTC);
+    }
 
     private Fixtures() {
     }
@@ -51,7 +67,7 @@ public final class Fixtures {
     public static PontoMonitoramento pontoPersistido(String id) {
         return new PontoMonitoramento(id, "PMA-001", "Poco da Escola Rural Sao Jose",
                 TipoFonte.POCO_ARTESIANO, 320, localizacao(), responsavel(), true,
-                Instant.now().minus(30, ChronoUnit.DAYS));
+                REFERENCIA.minus(30, ChronoUnit.DAYS));
     }
 
     public static PontoMonitoramento pontoPersistido() {
@@ -85,18 +101,29 @@ public final class Fixtures {
     public static Analise analiseConforme() {
         List<ResultadoParametro> parametros = parametrosConformes();
         return new Analise("analise-1", "ponto-1", "PMA-001",
-                Instant.now().minus(2, ChronoUnit.HOURS), "Tecnico Bruno",
-                parametros, new ResultadoAnalise(true, parametros.size(), 0), Instant.now());
+                REFERENCIA.minus(2, ChronoUnit.HOURS), "Tecnico Bruno",
+                parametros, new ResultadoAnalise(true, parametros.size(), 0), REFERENCIA);
     }
 
     /** Analise reprovada, ja com identificador. */
     public static Analise analiseNaoConforme() {
+        return analiseNaoConforme("analise-2");
+    }
+
+    /**
+     * Analise reprovada com identificador escolhido.
+     *
+     * <p>Necessario sempre que um teste precisa de duas ocorrencias: cada
+     * analise reprovada gera exatamente uma, garantida por indice unico em
+     * {@code analiseId}.
+     */
+    public static Analise analiseNaoConforme(String id) {
         List<ResultadoParametro> parametros = parametrosComViolacaoCritica();
         int reprovados = (int) parametros.stream().filter(ResultadoParametro::naoConforme).count();
-        return new Analise("analise-2", "ponto-1", "PMA-001",
-                Instant.now().minus(1, ChronoUnit.HOURS), "Tecnico Bruno",
+        return new Analise(id, "ponto-1", "PMA-001",
+                REFERENCIA.minus(1, ChronoUnit.HOURS), "Tecnico Bruno",
                 parametros, new ResultadoAnalise(false, parametros.size(), reprovados),
-                Instant.now());
+                REFERENCIA);
     }
 
     public static List<ParametroViolado> violados(Analise analise) {
@@ -110,16 +137,26 @@ public final class Fixtures {
 
     /** Ocorrencia aberta a partir de uma analise reprovada. */
     public static Ocorrencia ocorrenciaAberta() {
-        Analise analise = analiseNaoConforme();
+        return ocorrenciaAberta("analise-2");
+    }
+
+    /** Ocorrencia aberta a partir da analise reprovada indicada. */
+    public static Ocorrencia ocorrenciaAberta(String analiseId) {
+        Analise analise = analiseNaoConforme(analiseId);
         return Ocorrencia.abrir(analise, new ClassificadorPorRiscoSanitario(), violados(analise));
     }
 
-    /** Ocorrencia como volta do banco, com identificador e status controlado. */
+    /**
+     * Ocorrencia como volta do banco, com identificador e status controlado.
+     *
+     * <p>Aberta em {@link #REFERENCIA}, com prazo critico de 24 horas. Quem
+     * testa vencimento compara contra um {@code Clock} fixo antes ou depois de
+     * {@code REFERENCIA.plus(24h)}.
+     */
     public static Ocorrencia ocorrenciaPersistida(String id, StatusOcorrencia status) {
         Analise analise = analiseNaoConforme();
-        Instant agora = Instant.now();
         return new Ocorrencia(id, analise.getId(), analise.getPontoId(), analise.getPontoCodigo(),
-                Gravidade.CRITICA, "risco-sanitario", status, agora,
-                agora.plus(24, ChronoUnit.HOURS), violados(analise), new ArrayList<>());
+                Gravidade.CRITICA, "risco-sanitario", status, REFERENCIA,
+                REFERENCIA.plus(24, ChronoUnit.HOURS), violados(analise), new ArrayList<>());
     }
 }

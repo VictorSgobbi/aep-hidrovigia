@@ -1,8 +1,11 @@
 package br.com.hidrovigia.api;
 
+import java.time.Clock;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import br.com.hidrovigia.Fixtures;
+import br.com.hidrovigia.dominio.gravidade.Gravidade;
 import br.com.hidrovigia.dominio.ocorrencia.Ocorrencia;
 import br.com.hidrovigia.dominio.ocorrencia.StatusOcorrencia;
 import br.com.hidrovigia.servico.OcorrenciaService;
@@ -12,7 +15,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,6 +32,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(OcorrenciaController.class)
 @DisplayName("API de ocorrencias")
 class OcorrenciaControllerTest {
+
+    /**
+     * O controller decide {@code vencida} pelo {@code Clock} injetado. Parado
+     * em {@link Fixtures#REFERENCIA}, o prazo de 24 h das fixtures esta sempre
+     * a vencer — e o teste de vencimento avanca o relogio de proposito.
+     */
+    @TestConfiguration
+    static class RelogioDeTeste {
+
+        @Bean
+        Clock relogio() {
+            return Fixtures.relogioFixo();
+        }
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -54,6 +73,22 @@ class OcorrenciaControllerTest {
                 .andExpect(jsonPath("$[0].parametrosViolados[0].codigo").value("ECOLI"))
                 .andExpect(jsonPath("$[0].parametrosViolados[0].limiteAplicado")
                         .value("ausencia (UFC/100mL)"));
+    }
+
+    @Test
+    @DisplayName("GET marca como vencida a pendente que passou do prazo")
+    void marcaVencida() throws Exception {
+        Ocorrencia foraDoPrazo = new Ocorrencia("oc-9", "analise-2", "ponto-1", "PMA-001",
+                Gravidade.CRITICA, "risco-sanitario", StatusOcorrencia.ABERTA,
+                Fixtures.REFERENCIA.minus(48, ChronoUnit.HOURS),
+                Fixtures.REFERENCIA.minus(24, ChronoUnit.HOURS),
+                Fixtures.violados(Fixtures.analiseNaoConforme()), List.of());
+
+        when(servico.listar(null)).thenReturn(List.of(foraDoPrazo));
+
+        mockMvc.perform(get("/api/ocorrencias"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].vencida").value(true));
     }
 
     @Test
