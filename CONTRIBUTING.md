@@ -76,7 +76,7 @@ docs(readme): documenta problema, ODS 6, execucao e cobertura
 2. Faça commits pequenos e frequentes.
 3. Antes de abrir o PR, rode a verificação completa:
    ```bash
-   mvn clean verify
+   ./mvnw clean verify
    ```
 4. Abra o Pull Request e peça revisão de pelo menos um dos outros dois.
 5. Merge na `main` só com CI verde.
@@ -89,6 +89,69 @@ docs(readme): documenta problema, ODS 6, execucao e cobertura
 | `fix/` | Correção |
 | `test/` | Só testes |
 | `docs/` | Só documentação |
+
+## Proteção da branch main
+
+O item 5 acima é uma combinação entre nós — o GitHub só o **impõe** com proteção
+de branch configurada. Sem ela, o botão de merge fica disponível mesmo com a CI
+vermelha, e um `git push` direto na `main` passa sem revisão.
+
+A configuração precisa ser feita por quem tem permissão de **admin** no
+repositório (hoje, [@VictorSgobbi](https://github.com/VictorSgobbi)).
+
+### Pelo site
+
+`Settings` → `Branches` → `Add branch ruleset` (ou `Add rule`) na branch `main`:
+
+| Opção | Valor |
+|---|---|
+| Require a pull request before merging | ✅ |
+| Required approvals | 1 |
+| Require status checks to pass before merging | ✅ |
+| Status check obrigatório | **`Testes e cobertura`** |
+| Require branches to be up to date before merging | ✅ |
+| Do not allow bypassing the above settings | ✅ (vale também para admins) |
+
+O nome do check é exatamente o `name:` do job em
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml). Se o job for renomeado, a
+regra para de encontrar o check e **deixa de bloquear** — renomear job e regra
+tem que ser feito junto.
+
+### Pela linha de comando
+
+Mesma configuração, para quem preferir o `gh`:
+
+```bash
+gh api -X PUT repos/VictorSgobbi/aep-hidrovigia/branches/main/protection \
+  --input - <<'JSON'
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": ["Testes e cobertura"]
+  },
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 1,
+    "dismiss_stale_reviews": true
+  },
+  "enforce_admins": true,
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+JSON
+```
+
+Para conferir depois:
+
+```bash
+gh api repos/VictorSgobbi/aep-hidrovigia/branches/main/protection \
+  --jq '{checks: .required_status_checks.contexts, revisoes: .required_pull_request_reviews.required_approving_review_count, admins: .enforce_admins.enabled}'
+```
+
+> ⚠️ **Depois de ligar isso, ninguém mais commita direto na `main`** — inclusive
+> quem é admin, por causa do `enforce_admins`. Todo trabalho passa a entrar por
+> branch + PR, como no fluxo acima. É o comportamento desejado, mas vale avisar
+> o time antes de aplicar.
 
 ## Divisão de trabalho
 
@@ -103,14 +166,14 @@ trabalho / quadro de tarefas" da 2ª entrega evidenciado desde agora.
 
 ## Cobertura de testes
 
-O `mvn verify` reprova o build abaixo de **70% de linhas**. Se o seu PR derrubou
+O `./mvnw verify` reprova o build abaixo de **70% de linhas**. Se o seu PR derrubou
 a cobertura, o caminho não é baixar o mínimo no `pom.xml` — é escrever o teste
 que faltou.
 
 Para ver o que ficou descoberto:
 
 ```bash
-mvn clean test
+./mvnw clean test
 ```
 
 Depois abra `target/site/jacoco/index.html` e navegue até a classe.

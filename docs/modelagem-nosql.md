@@ -143,7 +143,8 @@ a vigilância age.
 
 **Relacionamento:** `analiseId` e `pontoId`.
 
-**Índices:** `analiseId` e `pontoId`.
+**Índices:** `analiseId` (único) e `pontoId`. O índice único é o que garante a
+cardinalidade 1:0..1 com `analises` — ver abaixo.
 
 ## Mapa dos relacionamentos
 
@@ -157,6 +158,11 @@ pontos_monitoramento (1) ──< (N) analises
 
 Uma análise reprovada gera exatamente uma ocorrência. Uma análise conforme não
 gera nenhuma.
+
+Essa regra é garantida por **índice único em `analiseId`**, e não apenas por
+convenção: `OcorrenciaRepository.findByAnaliseId` devolve `Optional`, então duas
+ocorrências para a mesma análise fariam a consulta falhar. O serviço checa antes
+e responde `409`; o índice cobre o caso de duas requisições concorrentes.
 
 ## Evolução prevista para a 2ª entrega
 

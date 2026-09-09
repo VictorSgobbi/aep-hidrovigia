@@ -54,9 +54,18 @@ grava qual política a classificou, então a decisão fica rastreável.
 As transições válidas são declaradas no próprio enum:
 
 ```
-ABERTA ──> EM_TRATATIVA ──> RESOLVIDA
-   └──────────────────────────┘
+                  ┌── nova tratativa ──┐
+                  │                    │
+                  ▼                    │
+ABERTA ──> EM_TRATATIVA ───────────────┘
+   │             │
+   └─────────────┴──> RESOLVIDA
 ```
+
+`EM_TRATATIVA` transiciona para si mesmo: a vigilância registra quantas ações
+forem necessárias antes de encerrar, e cada ação grava uma tratativa. É o único
+laço do ciclo — `ABERTA` não o tem, porque a primeira ação é o que tira a
+ocorrência da fila de não-iniciadas.
 
 `RESOLVIDA` não tem saída. O agregado recusa qualquer transição que o enum não
 autorize, então não existe caminho no código para resolver duas vezes a mesma
