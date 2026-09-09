@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: hidrovigia
+
+  profiles:
+    default: dev
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/hidrovigia}
+      auto-index-creation: true
+
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+
+hidrovigia:
+  # Popula a base com pontos e analises de demonstracao na subida da aplicacao.
+  # Desligue com HIDROVIGIA_CARGA_DEMONSTRACAO=false.
+  carga-demonstracao: ${HIDROVIGIA_CARGA_DEMONSTRACAO:true}
+
+logging:
+  level:
+    br.com.hidrovigia: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  data:
+    mongodb:
+      auto-index-creation: false
+
+hidrovigia:
+  carga-demonstracao: false

@@ -1,0 +1,37 @@
+services:
+
+  mongo:
+    image: mongo:7
+    container_name: hidrovigia-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: hidrovigia
+    volumes:
+      - dados-mongo:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # Interface web opcional para inspecionar as colecoes durante a gravacao
+  # do video. Suba com: docker compose --profile ferramentas up -d
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: hidrovigia-mongo-express
+    restart: unless-stopped
+    profiles: ["ferramentas"]
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongo:27017
+      ME_CONFIG_BASICAUTH: "false"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  dados-mongo:
