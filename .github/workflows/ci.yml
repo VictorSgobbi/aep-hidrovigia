@@ -6,6 +6,14 @@ on:
   pull_request:
     branches: [main]
 
+# Cancela execucoes antigas do mesmo PR quando chega um push novo.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   testes:
     name: Testes e cobertura
@@ -23,7 +31,27 @@ jobs:
           cache: maven
 
       - name: Executa testes e verifica cobertura minima de 70%
-        run: mvn --batch-mode clean verify
+        run: ./mvnw --batch-mode clean verify
+
+      # Os testes de integracao se desabilitam sozinhos em maquina sem Docker
+      # (disabledWithoutDocker). Isso e conveniente no notebook de cada um, mas
+      # na CI seria um buraco: qualquer problema de infraestrutura os pularia e
+      # o build passaria verde sem ter testado o MongoDB. Este passo transforma
+      # "pulado" em "reprovado".
+      - name: Confirma que os testes de integracao realmente rodaram
+        run: |
+          relatorio=target/surefire-reports/TEST-br.com.hidrovigia.repositorio.RepositoriosMongoIntegracaoTest.xml
+          if [ ! -f "$relatorio" ]; then
+            echo "::error::Relatorio dos testes de integracao nao encontrado em $relatorio"
+            exit 1
+          fi
+          pulados=$(sed -n 's/.*skipped="\([0-9]*\)".*/\1/p' "$relatorio" | head -1)
+          total=$(sed -n 's/.*tests="\([0-9]*\)".*/\1/p' "$relatorio" | head -1)
+          echo "Testes de integracao: $total no total, $pulados pulados."
+          if [ "$pulados" != "0" ] || [ "$total" = "0" ]; then
+            echo "::error::Os testes de integracao com MongoDB nao rodaram (Docker indisponivel?)."
+            exit 1
+          fi
 
       - name: Publica o relatorio de cobertura
         if: always()
