@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -61,6 +62,7 @@ class PontoMonitoramentoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(CORPO_VALIDO))
                 .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "/api/pontos/ponto-1"))
                 .andExpect(jsonPath("$.codigo").value("PMA-001"))
                 .andExpect(jsonPath("$.descricaoFonte").value("Poco artesiano"))
                 .andExpect(jsonPath("$.localizacao.municipio").value("Maringa"))
