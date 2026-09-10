@@ -43,11 +43,18 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       reportsDirectory: './coverage',
-      include: ['src/api/**/*.ts', 'src/dominio/**/*.ts'],
+      // Medido: so a logica cuja falha e silenciosa.
+      //
+      // Fora de proposito: tipos.ts (nao tem codigo em runtime), recursos.ts
+      // (18 wrappers de uma linha sobre requisitar), chaves.ts (dados) e
+      // queryClient.ts (configuracao). Exigir 90% deles seria comprar
+      // asseracoes de que uma linha continua sendo uma linha; a garantia real
+      // deles e o tsc.
+      include: ['src/api/erros.ts', 'src/api/cliente.ts', 'src/dominio/**/*.ts'],
       exclude: ['src/**/*.test.{ts,tsx}'],
       // Sem minimo global: a camada de apresentacao nao e medida, e isso e
-      // proposital — ela e verificada abrindo a tela. Estas duas pastas sao
-      // funcoes puras sem I/O, onde 90% e mais facil de sustentar que 70%.
+      // proposital — ela e verificada abrindo a tela. O que sobra aqui e
+      // funcao pura sem I/O, onde 90% e mais facil de sustentar que 70%.
       thresholds: {
         lines: 90,
         functions: 90,
