@@ -4,14 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
     "build": "tsc -b && vite build",
-    "tipos": "tsc -b --noEmit",
+    "dev": "vite",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
     "lint": "oxlint --deny-warnings",
+    "preview": "vite preview",
     "test": "vitest",
     "test:ci": "vitest run --coverage --reporter=default --reporter=json --outputFile=vitest-report.json",
-    "verificar": "npm run tipos && npm run lint && vitest run --coverage",
-    "preview": "vite preview"
+    "tipos": "tsc -b --noEmit",
+    "verificar": "npm run tipos && npm run lint && vitest run --coverage"
   },
   "engines": {
     "node": ">=22.12"
@@ -23,6 +25,7 @@
     "react-router-dom": "^7.18.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",

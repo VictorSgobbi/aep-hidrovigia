@@ -28,6 +28,9 @@ export default defineConfig({
 
   test: {
     environment: 'jsdom',
+    // Restrito a src/: os cenarios do Playwright ficam em e2e/ e sao rodados
+    // por ele, com um browser de verdade. Sem isto o Vitest tentaria executa-los.
+    include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: ['./src/testes/setup.ts'],
     // Fuso fixo. paraInstante() converte o valor de um
     // <input type="datetime-local"> (hora local, sem offset) para Instant UTC.

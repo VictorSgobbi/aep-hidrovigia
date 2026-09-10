@@ -394,9 +394,32 @@ pelos campos, as conversões de data e decimal e a prévia de conformidade. Um t
 exercita a cadeia inteira de uma requisição reprovada, do `fetch` até a mensagem
 aparecer ligada ao input certo.
 
-Layout **não** é testado, de propósito: um `<div>` fora de lugar aparece na primeira vez
-que alguém abre a tela, e as telas são abertas muitas vezes durante os ensaios do vídeo.
-Snapshot de JSX ensinaria a equipe a rodar `-u` por reflexo.
+Layout **não** é testado por unidade, de propósito: um `<div>` fora de lugar aparece na
+primeira vez que alguém abre a tela. Snapshot de JSX ensinaria a equipe a rodar `-u` por
+reflexo.
+
+### End-to-end — o fluxo do vídeo, num navegador de verdade
+
+```bash
+docker compose up -d
+./mvnw -Pfrontend clean package -DskipTests
+cd frontend && npm run e2e
+```
+
+Dois cenários no Playwright, contra o **jar empacotado** — a única verificação do
+projeto em que a interface e a API estão na mesma origem, servidas pelo mesmo processo,
+que é exatamente como a demonstração é gravada. Os testes do Vitest usam mocks de HTTP
+e nunca falam com o backend; os de backend não sabem que existe interface.
+
+O cenário principal é o roteiro do vídeo: registrar uma coleta contaminada em PMA-003,
+ver a ocorrência crítica que o sistema abre sozinho, registrar duas tratativas, encerrar
+e conferir que o painel mudou. O segundo dá um F5 em `/ocorrencias` e confirma que a
+aplicação carrega, em vez do 404 que existiria sem o encaminhamento de rotas.
+
+As asserções são **relativas**: o cenário lê a contagem de pendências antes de começar e
+verifica que ela sobe e volta. Fixar "3 pendências" faria o teste passar uma vez e
+falhar na segunda, porque ele grava no banco — e um teste que só roda numa base virgem
+não é rodado durante os ensaios, que é justamente quando ele tem mais valor.
 
 ### As duas medições de cobertura
 
@@ -417,10 +440,12 @@ O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) tem três jobs
 |---|---|
 | **Testes e cobertura** | `./mvnw clean verify` e a confirmação de que os testes de integração executaram |
 | **Frontend (lint, tipos e testes)** | `npm ci`, checagem de tipos, lint e testes com cobertura |
-| **Empacotamento com a interface** | `-Pfrontend package` e a conferência de que a SPA entrou no jar |
+| **Interface no jar (empacotamento e e2e)** | `-Pfrontend package`, a conferência de que a SPA entrou no jar e os cenários do Playwright contra ele, com MongoDB de serviço |
 
-Os dois últimos repetem a lição do primeiro: cada um tem um passo que reprova o build se
-a suíte tiver sido **pulada**, porque suíte que não roda é pior que suíte que falha.
+Os três repetem a mesma lição: cada um tem um passo que reprova o build se a suíte tiver
+sido **pulada**, porque suíte que não roda é pior que suíte que falha. Nos cenários
+end-to-end isso importa em dobro — eles dependem de banco e de navegador, e são o tipo
+de teste que se auto-desabilita sem avisar.
 
 > ⚠️ A proteção da branch `main` hoje exige apenas o check **Testes e cobertura**.
 > Enquanto os dois nomes novos não entrarem na regra, os jobs de frontend e de

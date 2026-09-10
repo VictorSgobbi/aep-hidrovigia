@@ -10,6 +10,9 @@ frontend/dist/
 frontend/.node/
 frontend/coverage/
 frontend/vitest-report.json
+frontend/playwright-report.json
+frontend/playwright-report/
+frontend/test-results/
 frontend/*.local
 *.tsbuildinfo
 npm-debug.log*

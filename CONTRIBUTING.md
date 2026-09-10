@@ -82,6 +82,14 @@ docs(readme): documenta problema, ODS 6, execucao e cobertura
    ```bash
    cd frontend && npm run verificar
    ```
+   E se você mexeu em algo que a interface exercita ponta a ponta — rota, formulário,
+   fluxo de ocorrência — vale rodar os cenários end-to-end antes de o revisor descobrir:
+   ```bash
+   ./mvnw -Pfrontend clean package -DskipTests
+   cd frontend && npm run e2e        # npm run e2e:ui para depurar passo a passo
+   ```
+   Eles precisam do MongoDB no ar (`docker compose up -d`) e, na primeira vez, do
+   navegador: `npx playwright install chromium`.
    Se você só tocou em Java, `./mvnw clean verify` continua bastando — e continua
    **não exigindo Node**.
 4. Abra o Pull Request e peça revisão de pelo menos um dos outros dois.
@@ -130,7 +138,7 @@ A CI tem três jobs, e o nome de cada um é o nome do status check:
 |---|---|
 | `Testes e cobertura` | teste de backend falhando, cobertura < 70%, ou teste de integração pulado |
 | `Frontend (lint, tipos e testes)` | erro de tipo, lint, teste falhando, ou suíte pulada |
-| `Empacotamento com a interface` | a SPA não entrou no jar |
+| `Interface no jar (empacotamento e e2e)` | a SPA não entrou no jar, ou um cenário do Playwright falhou |
 
 Renomear qualquer um desses jobs derruba a regra de proteção correspondente — **e a CI
 continua verde, o que é pior**. Renomear job e regra é a mesma tarefa.

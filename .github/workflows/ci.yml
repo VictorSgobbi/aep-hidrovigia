@@ -151,12 +151,31 @@ jobs:
           path: frontend/coverage/
           if-no-files-found: warn
 
-  # Prova automatica de que a demonstracao funciona: sem isto, "o jar builda"
-  # e "a interface esta dentro do jar" sao duas coisas diferentes, e a segunda
-  # so seria descoberta na hora de gravar.
-  empacotamento:
-    name: Empacotamento com a interface
+  # Prova automatica de que a demonstracao funciona.
+  #
+  # Este job responde uma pergunta que nenhum outro responde: a interface
+  # EMPACOTADA, servida pelo mesmo processo da API e na mesma origem, funciona?
+  # Os testes do Vitest usam MSW e nunca falam com o backend; os de backend nao
+  # sabem que existe interface; e "o jar builda" e "a interface esta dentro do
+  # jar e funciona" sao coisas diferentes. Sem isto, a segunda so seria
+  # descoberta na hora de gravar o video.
+  interface-no-jar:
+    name: Interface no jar (empacotamento e e2e)
     runs-on: ubuntu-latest
+
+    services:
+      # Mesma imagem do docker-compose.yml. A porta e publicada no runner,
+      # entao o mongodb://localhost:27017 do application.yml funciona sem
+      # nenhuma variavel de ambiente.
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping:1}).ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Baixa o codigo
@@ -176,9 +195,15 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
+      - name: Instala as dependencias do frontend
+        run: npm ci
+        working-directory: frontend
+
       - name: Empacota com o perfil do frontend
         run: ./mvnw --batch-mode -Pfrontend -DskipTests package
 
+      # Checagem barata antes do e2e: se a SPA nao entrou no jar, esta mensagem
+      # e muito mais direta que um cenario do Playwright falhando por timeout.
       - name: Confirma que a SPA entrou no jar
         run: |
           if ! unzip -l target/hidrovigia-1.0.0.jar \
@@ -187,3 +212,46 @@ jobs:
             exit 1
           fi
           echo "index.html presente em BOOT-INF/classes/static/."
+
+      - name: Instala o navegador do Playwright
+        # Só Chromium, e --with-deps porque o runner nao traz as bibliotecas
+        # de sistema que o navegador precisa.
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+
+      # O Playwright sobe o jar sozinho (webServer no playwright.config.ts) e
+      # espera a API responder antes de comecar.
+      - name: Executa os cenarios end-to-end
+        run: npm run e2e
+        working-directory: frontend
+
+      # Mesmo raciocinio dos outros jobs: cenario que nao roda e pior que
+      # cenario que falha, porque o build fica verde. Um testDir errado ou um
+      # arquivo renomeado deixaria o Playwright sair com codigo 0 e zero teste.
+      - name: Confirma que os cenarios realmente rodaram
+        working-directory: frontend
+        run: |
+          node -e '
+            const { stats } = require("./playwright-report.json");
+            const MINIMO = 2;
+            console.log(
+              `E2E: ${stats.expected} passaram, ${stats.skipped} pulados, ` +
+              `${stats.unexpected} falharam, ${stats.flaky} instaveis.`
+            );
+            if (stats.expected < MINIMO) {
+              console.log(`::error::Passaram ${stats.expected} cenarios; o minimo combinado e ${MINIMO}.`);
+              process.exit(1);
+            }
+            if (stats.skipped !== 0) {
+              console.log("::error::Ha cenario end-to-end pulado.");
+              process.exit(1);
+            }
+          '
+
+      - name: Publica o rastro dos cenarios que falharam
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rastro-e2e
+          path: frontend/test-results/
+          if-no-files-found: ignore
