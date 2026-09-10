@@ -4,6 +4,19 @@ target/
 build/
 out/
 
+# Front-end
+frontend/node_modules/
+frontend/dist/
+frontend/.node/
+frontend/coverage/
+frontend/vitest-report.json
+frontend/playwright-report.json
+frontend/playwright-report/
+frontend/test-results/
+frontend/*.local
+*.tsbuildinfo
+npm-debug.log*
+
 # IDE
 .idea/
 *.iml

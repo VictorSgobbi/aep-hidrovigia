@@ -11,8 +11,9 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Metadados da documentacao interativa servida em {@code /swagger-ui.html}.
  *
- * <p>E por essa tela que a PoC e demonstrada no video: ela expoe o fluxo
- * completo sem exigir front-end proprio.
+ * <p>A PoC e demonstrada pela interface em {@code /}, servida do proprio jar.
+ * O Swagger continua sendo onde o contrato da API se inspeciona — inclusive
+ * para conferir o que o frontend consome.
  */
 @Configuration
 public class OpenApiConfig {

@@ -1,0 +1,113 @@
+.pontos-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--e-4);
+  margin-bottom: var(--e-4);
+}
+
+.pontos-filtros .campo {
+  margin-bottom: 0;
+  min-width: 220px;
+}
+
+.pontos-filtros__ativos {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--e-2);
+  min-height: 44px;
+  padding-top: var(--e-5);
+  font-size: var(--t-pequeno);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pontos-filtros__ativos input {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.pontos-filtros__ativos .campo__dica {
+  display: block;
+  font-weight: 400;
+}
+
+.pontos-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e-3);
+  font-size: var(--t-pequeno);
+}
+
+.pontos-acoes__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--cor-marca);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.pontos-acoes__link--perigo {
+  color: var(--cor-critica);
+}
+
+.pontos-acoes__link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Modal ------------------------------------------------------------------- */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--e-4);
+  background: rgba(28, 36, 48, 0.5);
+  overflow-y: auto;
+}
+
+.modal__conteudo {
+  width: min(560px, 100%);
+  margin: var(--e-5) 0;
+  padding: var(--e-5);
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+  box-shadow: 0 12px 32px rgba(28, 36, 48, 0.25);
+}
+
+.ponto-form h2 {
+  margin-bottom: var(--e-4);
+}
+
+.ponto-form__grupo {
+  margin: 0 0 var(--e-4);
+  padding: var(--e-3);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+}
+
+.ponto-form__grupo legend {
+  padding: 0 var(--e-2);
+  font-size: var(--t-pequeno);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ponto-form__grupo .campo:last-child {
+  margin-bottom: 0;
+}
+
+.ponto-form__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e-2);
+}

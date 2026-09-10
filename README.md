@@ -187,6 +187,8 @@ ponto de extensão real, e a ocorrência grava **qual política a classificou**.
 
 | Camada | Tecnologia | Papel |
 |---|---|---|
+| Interface | **React 19 + Vite + TypeScript** | Quatro telas que consomem a API |
+| Estado remoto | TanStack Query | Cache e invalidação cruzada entre telas |
 | Linguagem | **Java 21** | Programação orientada a objetos |
 | Framework | **Spring Boot 3.3.5** | Injeção de dependências, REST, configuração |
 | Banco de dados | **MongoDB 7** | **NoSQL orientado a documentos** |
@@ -209,6 +211,12 @@ ponto de extensão real, e a ocorrência grava **qual política a classificou**.
 |---|---|---|
 | JDK | 21 | [Eclipse Temurin](https://adoptium.net/temurin/releases/?version=21) |
 | Docker | com Compose v2 | [Docker Desktop](https://www.docker.com/products/docker-desktop/) |
+| Node | 24 — **opcional** | [nodejs.org](https://nodejs.org/) |
+
+**Node só é necessário para mexer no frontend.** Quem trabalha no backend não precisa
+instalar nada além do JDK e do Docker: `./mvnw clean verify` continua sendo um comando
+só de Java. Para empacotar a interface junto, o perfil `-Pfrontend` baixa o Node
+sozinho.
 
 **Maven não precisa ser instalado.** O repositório traz o
 [Maven Wrapper](https://maven.apache.org/wrapper/) (`mvnw`), que baixa a versão
@@ -243,8 +251,12 @@ ao `docker compose down`.
 ### 3️⃣ Rode a aplicação
 
 ```bash
-./mvnw spring-boot:run
+./mvnw -Pfrontend spring-boot:run
 ```
+
+Um comando serve **a interface, a API e o Swagger** na porta 8080. O perfil compila o
+frontend antes de subir; sem ele (`./mvnw spring-boot:run`) sobe apenas a API, que é o
+suficiente para trabalhar no backend.
 
 Na primeira subida a base é populada com **3 pontos e 5 análises de demonstração**,
 cobrindo os quatro desfechos possíveis (conforme, média, alta e crítica). Para desligar
@@ -254,13 +266,27 @@ a carga:
 HIDROVIGIA_CARGA_DEMONSTRACAO=false ./mvnw spring-boot:run
 ```
 
-### 4️⃣ Abra a documentação interativa
+### 4️⃣ Abra a interface
 
-### 👉 **http://localhost:8080/swagger-ui.html**
+### 👉 **http://localhost:8080/**
 
-É por essa tela que a PoC é demonstrada — todo o fluxo roda ali, sem front-end próprio.
+Quatro telas: **Painel** de conformidade, **Pontos** de monitoramento, **Coletas** e a
+fila de **Ocorrências**. É por elas que a PoC é demonstrada.
 
-### 5️⃣ (Opcional) Inspecione as coleções
+A documentação interativa da API continua disponível em
+**http://localhost:8080/swagger-ui.html**, e é por onde se inspeciona o contrato.
+
+### 5️⃣ Para desenvolver o frontend
+
+```bash
+./mvnw spring-boot:run          # terminal 1: API em :8080
+cd frontend && npm install && npm run dev   # terminal 2: interface em :5173
+```
+
+O dev server do Vite encaminha `/api` para a porta 8080, então o navegador vê tudo na
+mesma origem — igual à produção, e sem CORS para configurar.
+
+### 6️⃣ (Opcional) Inspecione as coleções
 
 ```bash
 docker compose --profile ferramentas up -d
@@ -321,7 +347,10 @@ Ficam fora da medição apenas a classe de bootstrap (`HidroVigiaApplication`) e
 
 ### O que é testado
 
-São **186 testes** em 12 classes, distribuídos em quatro níveis:
+São **188 testes de backend** em 13 classes e **59 de frontend** em 10 arquivos. Os
+dois números medem coisas diferentes e **não se somam**.
+
+### Backend — 188 testes em quatro níveis
 
 | Nível | Ferramenta | Classes | O que cobre |
 |---|---|:---:|---|
@@ -353,13 +382,74 @@ Duas armadilhas de ambiente já estão resolvidas no `pom.xml`:
 Se ainda assim os testes forem pulados, rode `docker info` e confira se o daemon
 responde para o seu usuário.
 
+### Frontend — 59 testes na lógica, e não no layout
+
+```bash
+cd frontend && npm run verificar    # tipos + lint + testes com cobertura
+```
+
+O esforço de teste do frontend é concentrado onde **a falha é silenciosa**: a
+normalização das duas formas de erro da API, a distribuição das mensagens de validação
+pelos campos, as conversões de data e decimal e a prévia de conformidade. Um teste-ponte
+exercita a cadeia inteira de uma requisição reprovada, do `fetch` até a mensagem
+aparecer ligada ao input certo.
+
+Layout **não** é testado por unidade, de propósito: um `<div>` fora de lugar aparece na
+primeira vez que alguém abre a tela. Snapshot de JSX ensinaria a equipe a rodar `-u` por
+reflexo.
+
+### End-to-end — o fluxo do vídeo, num navegador de verdade
+
+```bash
+docker compose up -d
+./mvnw -Pfrontend clean package -DskipTests
+cd frontend && npm run e2e
+```
+
+Dois cenários no Playwright, contra o **jar empacotado** — a única verificação do
+projeto em que a interface e a API estão na mesma origem, servidas pelo mesmo processo,
+que é exatamente como a demonstração é gravada. Os testes do Vitest usam mocks de HTTP
+e nunca falam com o backend; os de backend não sabem que existe interface.
+
+O cenário principal é o roteiro do vídeo: registrar uma coleta contaminada em PMA-003,
+ver a ocorrência crítica que o sistema abre sozinho, registrar duas tratativas, encerrar
+e conferir que o painel mudou. O segundo dá um F5 em `/ocorrencias` e confirma que a
+aplicação carrega, em vez do 404 que existiria sem o encaminhamento de rotas.
+
+As asserções são **relativas**: o cenário lê a contagem de pendências antes de começar e
+verifica que ela sobe e volta. Fixar "3 pendências" faria o teste passar uma vez e
+falhar na segunda, porque ele grava no banco — e um teste que só roda numa base virgem
+não é rodado durante os ensaios, que é justamente quando ele tem mais valor.
+
+### As duas medições de cobertura
+
+| Medição | Ferramenta | Escopo | Mínimo travado | Atual |
+|---|---|---|:---:|:---:|
+| Backend | JaCoCo (`BUNDLE`, `LINE`) | `src/main/java`, menos bootstrap e `config/` | **70%** | ~99% |
+| Lógica do frontend | Vitest (v8) | `frontend/src/api` e `frontend/src/dominio` | **90%** | 100% |
+
+Os dois números medem coisas diferentes e não se somam. O JaCoCo instrumenta classes
+Java e não tem opinião sobre TypeScript. A camada de apresentação do frontend não é
+medida de propósito: ela é verificada abrindo a tela.
+
 ### Integração contínua
 
-O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda
-`./mvnw clean verify` a cada push e pull request na `main`, confirma que os testes de
-integração executaram e publica o relatório JaCoCo como artefato. O merge na `main`
-depende dessa verificação passar — veja
-[CONTRIBUTING.md](CONTRIBUTING.md#proteção-da-branch-main).
+O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) tem três jobs:
+
+| Job | O que faz |
+|---|---|
+| **Testes e cobertura** | `./mvnw clean verify` e a confirmação de que os testes de integração executaram |
+| **Frontend (lint, tipos e testes)** | `npm ci`, checagem de tipos, lint e testes com cobertura |
+| **Interface no jar (empacotamento e e2e)** | `-Pfrontend package`, a conferência de que a SPA entrou no jar e os cenários do Playwright contra ele, com MongoDB de serviço |
+
+Os três repetem a mesma lição: cada um tem um passo que reprova o build se a suíte tiver
+sido **pulada**, porque suíte que não roda é pior que suíte que falha. Nos cenários
+end-to-end isso importa em dobro — eles dependem de banco e de navegador, e são o tipo
+de teste que se auto-desabilita sem avisar.
+
+> ⚠️ A proteção da branch `main` hoje exige apenas o check **Testes e cobertura**.
+> Enquanto os dois nomes novos não entrarem na regra, os jobs de frontend e de
+> empacotamento são informativos.
 
 ---
 
@@ -644,6 +734,12 @@ aep-hidrovigia/
 │   │   │   └── servico/              4 serviços de aplicação
 │   │   └── resources/application.yml
 │   └── test/java/br/com/hidrovigia/  12 classes de teste + Fixtures
+├── frontend/                         Interface React + Vite + TypeScript
+│   └── src/
+│       ├── api/                      Cliente tipado e normalizacao de erro
+│       ├── componentes/              Selos, campos, prazo, estados
+│       ├── dominio/                  Rotulos, prazos, limites, formatos
+│       └── paginas/                  painel · pontos · coletas · ocorrencias
 ├── docker-compose.yml                MongoDB 7 + Mongo Express opcional
 ├── mvnw · mvnw.cmd · .mvn/           Maven Wrapper — dispensa instalar Maven
 ├── pom.xml                           Dependências e trava de cobertura
@@ -718,11 +814,11 @@ Onde encontrar a evidência de cada critério da 1ª entrega.
 | Critério | Pts | Evidência neste repositório |
 |---|:---:|---|
 | Problema e alinhamento ao ODS | 0,1 | [O problema](#-o-problema) e [ODS](#-objetivo-de-desenvolvimento-sustentável) — limites vindos da Portaria GM/MS 888/2021, com público-alvo identificado |
-| Primeira versão funcional da PoC | 0,1 | Fluxo principal executável via Swagger UI, com carga de demonstração automática |
+| Primeira versão funcional da PoC | 0,1 | Fluxo principal executável pela interface em `localhost:8080`, com carga de demonstração automática; contrato inspecionável no Swagger UI |
 | Banco de dados NoSQL | 0,1 | [Estrutura do banco](#-estrutura-do-banco-nosql) — 3 coleções, relacionamento e subdocumentos aninhados em todas |
 | POO e organização do código | 0,1 | [Arquitetura](#-arquitetura-e-orientação-a-objetos) — Template Method, polimorfismo, Strategy, State, objetos de valor |
 | GitHub e versionamento | 0,1 | Histórico em Conventional Commits, tag `v1.0-entrega1`, CI verde |
-| Testes automatizados | 0,1 | 186 testes em 12 classes e 4 níveis — `./mvnw clean verify` |
+| Testes automatizados | 0,1 | 188 testes de backend em 4 níveis (`./mvnw clean verify`) e 59 de frontend (`npm run verificar`) |
 | **Cobertura ≥ 70%** | 0,1 | JaCoCo travando o build; relatório em `target/site/jacoco/index.html` |
 | Vídeo de demonstração | 0,3 | Link em [Identificação](#-identificação) |
 
@@ -753,7 +849,11 @@ O edital descreve dois níveis. Esta PoC já entrega o **mais alto**, que satisf
 
 ## 🔭 Evolução prevista
 
-Escopo mapeado para a 2ª entrega:
+**Entregue na 2ª entrega:** interface própria com as quatro telas, cobrindo os 18
+endpoints — a evolução mais visível da solução, e o que permite mostrar prazo, fila de
+pendências e gravidade em vez de descrevê-los.
+
+Ainda no escopo, todos de backend:
 
 - **Série histórica por parâmetro**, com agregações do MongoDB (`$group`, `$bucket`)
 - **Alerta de análise vencida**, comparando a última coleta com a frequência mínima

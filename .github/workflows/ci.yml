@@ -68,3 +68,190 @@ jobs:
           name: resultado-testes
           path: target/surefire-reports/
           if-no-files-found: warn
+
+  # Job separado, e nao um passo do job acima, por tres motivos:
+  #
+  # 1. "Testes e cobertura" e o nome do status check exigido pela protecao da
+  #    branch main. Nao editar aquele job e a garantia de nao derrubar a regra.
+  # 2. Uma falha de lint nao deve aparecer como "cobertura reprovada".
+  # 3. Roda em paralelo, entao o tempo total da CI nao muda.
+  #
+  # ATENCAO: a protecao da branch precisa passar a exigir OS DOIS nomes de
+  # check. Enquanto so "Testes e cobertura" estiver na regra, este job e
+  # informativo e um PR com o front quebrado ainda pode ser mergeado.
+  #
+  # Nao usar `paths:` para pular este job em PR que so mexe no backend: um
+  # required check pulado por filtro nunca reporta status, e o PR fica preso
+  # em "waiting for status" para sempre. Parece economia e nao e.
+  frontend:
+    name: Frontend (lint, tipos e testes)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      # A conversao de datetime-local para Instant depende do fuso. O mesmo
+      # valor esta no test.env do vite.config.ts; aqui e cinto e suspensorio.
+      TZ: America/Sao_Paulo
+
+    steps:
+      - name: Baixa o codigo
+        uses: actions/checkout@v4
+
+      - name: Configura o Node
+        uses: actions/setup-node@v4
+        with:
+          # Le a versao do .nvmrc: a CI e a maquina de cada um usam a mesma.
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instala as dependencias exatamente como no lockfile
+        run: npm ci
+
+      - name: Verifica os tipos
+        # `vite build` nao checa tipo: sem este passo o TypeScript e decoracao.
+        run: npm run tipos
+
+      - name: Verifica o lint
+        run: npm run lint
+
+      - name: Executa os testes com cobertura
+        run: npm run test:ci
+
+      # Mesmo raciocinio do passo dos testes de integracao: suite que nao roda
+      # e pior que suite que falha, porque o build fica verde. O Vitest passa
+      # sem testes quando o glob nao casa, e um .skip esquecido nao reprova.
+      - name: Confirma que a suite do frontend realmente rodou
+        run: |
+          node -e '
+            const relatorio = require("./vitest-report.json");
+            const MINIMO = 30;
+            const pulados =
+              (relatorio.numPendingTests ?? 0) + (relatorio.numTodoTests ?? 0);
+            console.log(
+              `Frontend: ${relatorio.numTotalTests} testes, ${pulados} pulados, ` +
+              `${relatorio.numFailedTests} falharam.`
+            );
+            if (!relatorio.numTotalTests || relatorio.numTotalTests < MINIMO) {
+              console.log(`::error::Rodaram ${relatorio.numTotalTests} testes; o minimo combinado e ${MINIMO}.`);
+              process.exit(1);
+            }
+            if (pulados !== 0) {
+              console.log("::error::Ha teste pulado (.skip/.todo) na suite do frontend.");
+              process.exit(1);
+            }
+          '
+
+      - name: Publica o relatorio de cobertura do frontend
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-cobertura-frontend
+          path: frontend/coverage/
+          if-no-files-found: warn
+
+  # Prova automatica de que a demonstracao funciona.
+  #
+  # Este job responde uma pergunta que nenhum outro responde: a interface
+  # EMPACOTADA, servida pelo mesmo processo da API e na mesma origem, funciona?
+  # Os testes do Vitest usam MSW e nunca falam com o backend; os de backend nao
+  # sabem que existe interface; e "o jar builda" e "a interface esta dentro do
+  # jar e funciona" sao coisas diferentes. Sem isto, a segunda so seria
+  # descoberta na hora de gravar o video.
+  interface-no-jar:
+    name: Interface no jar (empacotamento e e2e)
+    runs-on: ubuntu-latest
+
+    services:
+      # Mesma imagem do docker-compose.yml. A porta e publicada no runner,
+      # entao o mongodb://localhost:27017 do application.yml funciona sem
+      # nenhuma variavel de ambiente.
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping:1}).ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Baixa o codigo
+        uses: actions/checkout@v4
+
+      - name: Configura o JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Configura o Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instala as dependencias do frontend
+        run: npm ci
+        working-directory: frontend
+
+      - name: Empacota com o perfil do frontend
+        run: ./mvnw --batch-mode -Pfrontend -DskipTests package
+
+      # Checagem barata antes do e2e: se a SPA nao entrou no jar, esta mensagem
+      # e muito mais direta que um cenario do Playwright falhando por timeout.
+      - name: Confirma que a SPA entrou no jar
+        run: |
+          if ! unzip -l target/hidrovigia-1.0.0.jar \
+               | grep -q 'BOOT-INF/classes/static/index.html'; then
+            echo "::error::A interface nao foi empacotada no jar (-Pfrontend quebrado?)."
+            exit 1
+          fi
+          echo "index.html presente em BOOT-INF/classes/static/."
+
+      - name: Instala o navegador do Playwright
+        # Só Chromium, e --with-deps porque o runner nao traz as bibliotecas
+        # de sistema que o navegador precisa.
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+
+      # O Playwright sobe o jar sozinho (webServer no playwright.config.ts) e
+      # espera a API responder antes de comecar.
+      - name: Executa os cenarios end-to-end
+        run: npm run e2e
+        working-directory: frontend
+
+      # Mesmo raciocinio dos outros jobs: cenario que nao roda e pior que
+      # cenario que falha, porque o build fica verde. Um testDir errado ou um
+      # arquivo renomeado deixaria o Playwright sair com codigo 0 e zero teste.
+      - name: Confirma que os cenarios realmente rodaram
+        working-directory: frontend
+        run: |
+          node -e '
+            const { stats } = require("./playwright-report.json");
+            const MINIMO = 2;
+            console.log(
+              `E2E: ${stats.expected} passaram, ${stats.skipped} pulados, ` +
+              `${stats.unexpected} falharam, ${stats.flaky} instaveis.`
+            );
+            if (stats.expected < MINIMO) {
+              console.log(`::error::Passaram ${stats.expected} cenarios; o minimo combinado e ${MINIMO}.`);
+              process.exit(1);
+            }
+            if (stats.skipped !== 0) {
+              console.log("::error::Ha cenario end-to-end pulado.");
+              process.exit(1);
+            }
+          '
+
+      - name: Publica o rastro dos cenarios que falharam
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rastro-e2e
+          path: frontend/test-results/
+          if-no-files-found: ignore

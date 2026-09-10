@@ -1,0 +1,46 @@
+.painel-escopo {
+  display: flex;
+  align-items: center;
+  gap: var(--e-2);
+  font-size: var(--t-pequeno);
+  font-weight: 600;
+}
+
+.painel-escopo select {
+  min-height: 40px;
+  padding: var(--e-1) var(--e-2);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-pequeno);
+  background: var(--cor-superficie);
+  font: inherit;
+  font-weight: 400;
+}
+
+.fila-item {
+  display: grid;
+  gap: var(--e-2);
+}
+
+.fila-item__selos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e-2);
+}
+
+.fila-item__vencida {
+  color: var(--cor-critica);
+  font-size: var(--t-pequeno);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fila-item__ponto {
+  margin: 0;
+  font-weight: 600;
+}
+
+.fila-item__violacoes {
+  font-weight: 400;
+  color: var(--cor-texto-fraco);
+}
