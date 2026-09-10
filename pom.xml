@@ -170,4 +170,119 @@
     </plugins>
   </build>
 
+  <!--
+    Front-end React/Vite: OPT-IN, so com -Pfrontend.
+
+    Fora deste perfil o build nao encosta em Node. `./mvnw clean verify`
+    continua exigindo apenas JDK 21 e Docker, como esta documentado no README,
+    e continua sendo a evidencia reproduzivel de cobertura que o edital pede:
+    quem mexe so em backend nao precisa instalar Node, e uma falha do registro
+    do npm nao reprova a medicao de cobertura.
+
+    Com o perfil: npm ci + npm run build, e a saida (frontend/dist) e copiada
+    para target/classes/static, de onde o proprio Spring serve a SPA.
+
+    A copia acontece em process-resources, e nao em prepare-package, porque o
+    spring-boot:run so leva o ciclo ate test-compile. Ligando aqui,
+    `./mvnw -Pfrontend spring-boot:run` serve API, SPA e Swagger em :8080 num
+    unico comando — que e como a demonstracao e gravada.
+  -->
+  <profiles>
+    <profile>
+      <id>frontend</id>
+
+      <properties>
+        <!-- Manter em sincronia com frontend/.nvmrc -->
+        <node.version>v24.15.0</node.version>
+        <frontend.plugin.version>1.15.1</frontend.plugin.version>
+      </properties>
+
+      <build>
+        <plugins>
+
+          <plugin>
+            <groupId>com.github.eirslett</groupId>
+            <artifactId>frontend-maven-plugin</artifactId>
+            <version>${frontend.plugin.version}</version>
+            <configuration>
+              <workingDirectory>frontend</workingDirectory>
+              <!--
+                Fora de target/: sobrevive ao `clean` e evita rebaixar o Node a
+                cada build limpo. Ignorado no .gitignore.
+              -->
+              <installDirectory>frontend/.node</installDirectory>
+            </configuration>
+            <executions>
+              <execution>
+                <id>instala-node-e-npm</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>install-node-and-npm</goal>
+                </goals>
+                <configuration>
+                  <nodeVersion>${node.version}</nodeVersion>
+                </configuration>
+              </execution>
+              <execution>
+                <!-- npm ci, e nao npm install: reprova se o lockfile divergir
+                     do package.json, em vez de resolver versoes em silencio. -->
+                <id>npm-ci</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
+                <configuration>
+                  <arguments>ci</arguments>
+                </configuration>
+              </execution>
+              <execution>
+                <id>npm-build</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
+                <configuration>
+                  <arguments>run build</arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copia-spa-para-static</id>
+                <phase>process-resources</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <!--
+                    target/classes/static, nunca src/main/resources/static: o
+                    `clean` nao limparia a segunda, e um bundle velho
+                    continuaria sendo servido depois de mudar o front.
+                  -->
+                  <outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>frontend/dist</directory>
+                      <!--
+                        Obrigatorio: o Vite gera JS com ${...} e arquivos
+                        binarios. Filtrar corromperia o bundle.
+                      -->
+                      <filtering>false</filtering>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
 </project>
