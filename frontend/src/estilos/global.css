@@ -1,0 +1,160 @@
+@import './tokens.css';
+
+/* Reset curto */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font: var(--t-base) / 1.55 var(--fonte);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 var(--e-3);
+  line-height: 1.25;
+  color: var(--cor-texto);
+}
+
+h1 {
+  font-size: var(--t-grande);
+}
+h2 {
+  font-size: var(--t-medio);
+}
+h3 {
+  font-size: var(--t-base);
+}
+
+p {
+  margin: 0 0 var(--e-3);
+}
+
+img {
+  max-width: 100%;
+}
+
+/* Todo interativo mostra foco visivel, com alvo minimo de 44px onde couber */
+:focus-visible {
+  outline: 2px solid var(--cor-marca);
+  outline-offset: 2px;
+}
+
+/* Layout ------------------------------------------------------------------ */
+
+.app-cabecalho {
+  background: var(--cor-marca);
+  color: var(--cor-texto-inverso);
+}
+
+.app-cabecalho__interno,
+.app-principal {
+  max-width: var(--largura-maxima);
+  margin: 0 auto;
+  padding: 0 var(--e-4);
+}
+
+.app-cabecalho__interno {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e-2) var(--e-5);
+  padding-top: var(--e-3);
+  padding-bottom: var(--e-3);
+}
+
+.app-marca {
+  display: flex;
+  align-items: baseline;
+  gap: var(--e-2);
+  font-size: var(--t-medio);
+  font-weight: 700;
+}
+
+.app-marca__sufixo {
+  font-size: var(--t-pequeno);
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.app-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e-1);
+  margin-left: auto;
+}
+
+.app-nav__item {
+  display: block;
+  padding: var(--e-2) var(--e-3);
+  border-radius: var(--raio-pequeno);
+  color: var(--cor-texto-inverso);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.app-nav__item:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Nao depende so de cor: o item ativo tambem ganha sublinhado */
+.app-nav__item[aria-current='page'] {
+  background: rgba(255, 255, 255, 0.2);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.app-principal {
+  padding-top: var(--e-6);
+  padding-bottom: var(--e-7);
+}
+
+/* Link para pular a navegacao, visivel so quando recebe foco */
+.pular-para-conteudo {
+  position: absolute;
+  left: -9999px;
+}
+
+.pular-para-conteudo:focus {
+  position: static;
+  display: inline-block;
+  margin: var(--e-2);
+  padding: var(--e-2) var(--e-3);
+  background: var(--cor-superficie);
+  color: var(--cor-marca);
+  border-radius: var(--raio-pequeno);
+}
+
+/* Utilitarios ------------------------------------------------------------- */
+
+.so-leitor-de-tela {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

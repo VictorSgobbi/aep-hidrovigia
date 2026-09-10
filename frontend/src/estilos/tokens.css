@@ -1,0 +1,62 @@
+/*
+  Tokens do HidroVigia.
+
+  As cores de gravidade e de risco sao as unicas com significado de dominio:
+  elas repetem, em cor, o que os selos ja dizem em texto e em forma. Cor e
+  sempre o terceiro canal, nunca o unico — ver componentes/Selo.
+*/
+:root {
+  /* Neutros */
+  --cor-fundo: #f7f8fa;
+  --cor-superficie: #ffffff;
+  --cor-borda: #dfe3e8;
+  --cor-borda-forte: #c4cad2;
+  --cor-texto: #1c2430;
+  --cor-texto-fraco: #5b6774;
+  --cor-texto-inverso: #ffffff;
+
+  /* Identidade: agua */
+  --cor-marca: #0a6c8f;
+  --cor-marca-escura: #075670;
+  --cor-marca-fraca: #e6f2f7;
+
+  /* Gravidade da ocorrencia (prazo de resposta entre parenteses) */
+  --cor-critica: #b3261e;        /* 24 h  */
+  --cor-critica-fundo: #fdecea;
+  --cor-alta: #b25a00;           /* 72 h  */
+  --cor-alta-fundo: #fdf2e3;
+  --cor-media: #8a6d00;          /* 168 h */
+  --cor-media-fundo: #fbf6de;
+
+  /* Veredito de conformidade */
+  --cor-conforme: #1b6b40;
+  --cor-conforme-fundo: #e7f4ec;
+  --cor-nao-conforme: var(--cor-critica);
+  --cor-nao-conforme-fundo: var(--cor-critica-fundo);
+
+  /* Espacamento */
+  --e-1: 0.25rem;
+  --e-2: 0.5rem;
+  --e-3: 0.75rem;
+  --e-4: 1rem;
+  --e-5: 1.5rem;
+  --e-6: 2rem;
+  --e-7: 3rem;
+
+  /* Tipografia */
+  --fonte: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --fonte-mono: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+  --t-pequeno: 0.8125rem;
+  --t-base: 0.9375rem;
+  --t-medio: 1.125rem;
+  --t-grande: clamp(1.375rem, 1.1rem + 1.2vw, 1.75rem);
+  --t-numero: clamp(1.75rem, 1.3rem + 2vw, 2.5rem);
+
+  /* Formas */
+  --raio: 8px;
+  --raio-pequeno: 4px;
+  --sombra: 0 1px 2px rgba(28, 36, 48, 0.06), 0 2px 8px rgba(28, 36, 48, 0.06);
+
+  /* Layout */
+  --largura-maxima: 1180px;
+}
