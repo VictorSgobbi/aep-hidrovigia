@@ -1,0 +1,186 @@
+================================================================================
+  HIDROVIGIA - ROTEIRO DO VIDEO DA 2a ENTREGA
+================================================================================
+
+  Duracao exigida pelo edital: 3 a 5 minutos
+  Duracao alvo deste roteiro:  4min10s
+
+  Equipe:
+    Victor Sgobbi ....... Bloco 1 - O que evoluiu e por que
+    Bruno ............... Bloco 2 - Modelagem e o defeito que os testes acharam
+    Leonardo ............ Bloco 3 - A interface funcionando
+
+  Diferenca em relacao a 1a entrega: a demonstracao agora acontece na
+  interface, e nao no Swagger. O Swagger aparece de passagem, como prova de
+  que o contrato da API continua publicado.
+
+--------------------------------------------------------------------------------
+  AMBIENTE (conferir ANTES de gravar)
+--------------------------------------------------------------------------------
+
+  [ ] Base limpa, para o painel abrir com os numeros da carga de demonstracao:
+        docker compose down -v && docker compose up -d
+      (sem o -v, coletas de ensaio ficam na base e os numeros nao batem com o
+       que este roteiro diz)
+
+  [ ] Um comando serve tudo:
+        ./mvnw -Pfrontend spring-boot:run
+
+  [ ] Interface aberta:  http://localhost:8080/
+  [ ] Swagger em outra aba: http://localhost:8080/swagger-ui.html
+  [ ] Relatorio de cobertura em outra aba: target/site/jacoco/index.html
+  [ ] Zoom do navegador em 110% ou 125%: numero pequeno nao aparece no video
+  [ ] Conferir que o painel mostra 40,0% de conformidade e 3 pendencias
+
+  [ ] Se for mostrar a CI: a aba do Actions com os tres jobs verdes
+
+--------------------------------------------------------------------------------
+  BLOCO 1 - VICTOR - 0:00 a 1:05 - O que evoluiu
+--------------------------------------------------------------------------------
+
+  TELA: Slide de abertura, depois o painel da aplicacao.
+
+  "HidroVigia, vigilancia da qualidade da agua em sistemas de abastecimento de
+   pequeno porte. Na primeira entrega mostramos que a regra funcionava; nesta,
+   mostramos o produto.
+
+   O problema que ele resolve e o intervalo entre detectar um resultado fora do
+   padrao e agir sobre ele. Esse intervalo e onde mora o risco sanitario, e ele
+   nao aparece num formulario de documentacao de API: prazo que corre, fila
+   ordenada por urgencia e gravidade classificada por norma precisam de tela.
+
+   [TROCAR PARA O PAINEL]
+
+   Isto e o sistema agora. Quarenta por cento de conformidade, tres pendencias
+   abertas, nenhuma fora do prazo. Os limites continuam vindo da Portaria
+   GM/MS 888 de 2021 — nao ha critario inventado pela equipe."
+
+  DICA: deixar o painel ja carregado antes de trocar, para nao gravar o
+        estado de carregamento.
+
+--------------------------------------------------------------------------------
+  BLOCO 2 - BRUNO - 1:05 a 2:15 - Modelagem e o que os testes acharam
+--------------------------------------------------------------------------------
+
+  TELA: Mongo Express com as tres colecoes, depois a IDE.
+
+  "Tres colecoes, com subdocumentos aninhados em todas: pontos, analises e
+   ocorrencias.
+
+   [MOSTRAR UM DOCUMENTO DE 'analises' JA EXPANDIDO]
+
+   O limite aplicado fica gravado dentro de cada parametro. Norma muda, e uma
+   analise de 2026 precisa continuar mostrando o limite que valia em 2026 —
+   sem isso o historico deixa de ser auditavel.
+
+   Nesta entrega a modelagem ganhou uma garantia que faltava: analiseId agora
+   tem indice unico. A consulta que busca a ocorrencia de uma analise devolve
+   no maximo uma, e isso era so uma intencao documentada. Duas requisicoes
+   concorrentes criariam duas ocorrencias e a consulta passaria a falhar.
+
+   O defeito apareceu quando os testes de integracao voltaram a rodar. Eles
+   estavam sendo pulados em silencio: o Docker atual recusa a versao de API
+   que a biblioteca pedia, e o Testcontainers lia isso como 'nao existe Docker
+   aqui'. O build ficava verde sem nunca ter encostado no banco. Hoje a CI
+   reprova se essa suite for pulada."
+
+  DICA: essa e a parte mais forte do bloco. Suite que nao roda e pior que
+        suite que falha, e a equipe tem a cicatriz para provar.
+
+--------------------------------------------------------------------------------
+  BLOCO 3 - LEONARDO - 2:15 a 4:10 - A interface funcionando
+--------------------------------------------------------------------------------
+
+  TELA: a aplicacao em tela cheia. ESTA PARTE E AO VIVO.
+
+  1. >>> ACAO: ir para OCORRENCIAS <<<
+
+     "A fila de pendencias, ordenada pelo prazo mais proximo de vencer. A
+      ordem vem do servidor, e cada item mostra a gravidade com o prazo da
+      norma: critica, 24 horas."
+
+  2. >>> ACAO: abrir a ocorrencia critica <<<
+
+     "O parametro violado, o valor medido e o limite que foi aplicado. E, aqui,
+      'classificada por: pior risco sanitario da amostra' — a gravidade nao e
+      palpite, e o resultado de uma politica que a ocorrencia grava."
+
+  3. >>> ACAO: registrar uma tratativa <<<
+
+     "A vigilancia registra a acao. O status muda para 'em tratativa' e o prazo
+      continua correndo — resolver e outra coisa, e e definitivo."
+
+  4. >>> ACAO: ir para COLETAS, escolher PMA-003 <<<
+
+     "Agora o caso central. O formulario e montado pelo catalogo da norma: uma
+      linha por parametro, na ordem em que ela os organiza, microbiologicos
+      primeiro."
+
+  5. >>> ACAO: marcar ECOLI e digitar 14; marcar CTOT e digitar 62 <<<
+
+     "A previa acusa 'fora do limite' enquanto digito. E previa: o veredito que
+      vale e o do servidor, que e quem aplica a norma."
+
+  6. >>> ACAO: clicar em REGISTRAR COLETA <<<
+
+     "Nao conforme, com o veredito de cada parametro. E, junto,
+      'uma ocorrencia foi aberta automaticamente' — critica, 24 horas."
+
+  7. >>> ACAO: clicar em 'Abrir na fila de pendencias' <<<
+
+     "A mesma ocorrencia, agora na fila. Foi o proprio sistema que a abriu."
+
+  8. >>> ACAO: encerrar a ocorrencia, confirmando <<<
+
+     "Encerrar pede confirmacao porque nao existe reabertura: resolvida e um
+      estado terminal no dominio."
+
+  9. >>> ACAO: voltar ao PAINEL <<<
+
+     "Os numeros mudaram. Esse encadeamento — coleta, ocorrencia, tratativa,
+      painel — e o que fecha o intervalo entre detectar e agir."
+
+ 10. >>> ACAO (se houver tempo): trocar para a aba do Swagger <<<
+
+     "O contrato da API segue publicado, servido pelo mesmo jar."
+
+--------------------------------------------------------------------------------
+  DISTRIBUICAO DO TEMPO
+--------------------------------------------------------------------------------
+
+  Bloco   Quem        Tempo    Item do edital
+  -----   ---------   ------   ------------------------------------------
+    1     Victor      1:05     Evolucao da solucao
+    2     Bruno       1:10     Documentacao tecnica / modelagem
+    3     Leonardo    1:55     Solucao funcionando
+                      -----
+                      4:10
+
+--------------------------------------------------------------------------------
+  ORDEM DE CORTE, se estourar os 5 minutos
+--------------------------------------------------------------------------------
+
+    1. O passo 10 (aba do Swagger).
+    2. O passo 3 (tratativa na ocorrencia que ja existia) — o passo 8 ja
+       mostra o ciclo se fechando.
+    3. A passagem pelo Mongo Express no Bloco 2.
+
+  NAO CORTE, em hipotese alguma:
+    - A mencao ao ODS 6 e a Portaria 888/2021 (Bloco 1)
+    - O indice unico e o teste que estava sendo pulado (Bloco 2) -- e o que
+      mostra metodologia, nao so funcionalidade
+    - Os passos 4 a 7 do Bloco 3: registrar a coleta contaminada e a ocorrencia
+      sendo aberta sozinha. E a prova de que a solucao funciona.
+
+--------------------------------------------------------------------------------
+  DEPOIS DE GRAVAR
+--------------------------------------------------------------------------------
+
+  [ ] Editar para ficar entre 3:00 e 5:00
+  [ ] Subir no YouTube como NAO LISTADO
+  [ ] Colar o link no README, na secao Identificacao, e no Modelo de Entrega
+  [ ] Conferir o audio dos tres blocos no mesmo volume
+  [ ] Conferir que nenhum dado pessoal aparece na tela
+  [ ] Criar a tag da entrega e conferir que a CI esta verde nela
+
+  Ultima atualizacao: 10/09/2026

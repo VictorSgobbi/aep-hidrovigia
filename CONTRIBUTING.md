@@ -78,6 +78,12 @@ docs(readme): documenta problema, ODS 6, execucao e cobertura
    ```bash
    ./mvnw clean verify
    ```
+   Se você tocou em `frontend/`, rode também:
+   ```bash
+   cd frontend && npm run verificar
+   ```
+   Se você só tocou em Java, `./mvnw clean verify` continua bastando — e continua
+   **não exigindo Node**.
 4. Abra o Pull Request e peça revisão de pelo menos um dos outros dois.
 5. Merge na `main` só com CI verde.
 
@@ -89,6 +95,9 @@ docs(readme): documenta problema, ODS 6, execucao e cobertura
 | `fix/` | Correção |
 | `test/` | Só testes |
 | `docs/` | Só documentação |
+
+Para commits que mexem na interface, o escopo é `frontend`:
+`feat(frontend): ...`, `build(frontend): ...`.
 
 ## Divisão de trabalho
 
@@ -106,6 +115,29 @@ trabalho / quadro de tarefas" da 2ª entrega evidenciado desde agora.
 O `./mvnw verify` reprova o build abaixo de **70% de linhas**. Se o seu PR derrubou
 a cobertura, o caminho não é baixar o mínimo no `pom.xml` — é escrever o teste
 que faltou.
+
+O frontend tem uma medição **separada**: o Vitest trava em 90% sobre `src/api` e
+`src/dominio`, que é onde a lógica de falha silenciosa mora. A camada de apresentação
+não é medida de propósito. Os dois números não se somam, e o JaCoCo não tem opinião
+sobre TypeScript — não adicione `frontend/` aos `<excludes>` dele, seria um no-op que
+documenta um mal-entendido.
+
+### Os checks obrigatórios da CI
+
+A CI tem três jobs, e o nome de cada um é o nome do status check:
+
+| Job | Quando reprova |
+|---|---|
+| `Testes e cobertura` | teste de backend falhando, cobertura < 70%, ou teste de integração pulado |
+| `Frontend (lint, tipos e testes)` | erro de tipo, lint, teste falhando, ou suíte pulada |
+| `Empacotamento com a interface` | a SPA não entrou no jar |
+
+Renomear qualquer um desses jobs derruba a regra de proteção correspondente — **e a CI
+continua verde, o que é pior**. Renomear job e regra é a mesma tarefa.
+
+⚠️ Hoje a proteção da `main` exige apenas `Testes e cobertura`. Os outros dois só passam
+a bloquear quando forem acrescentados à regra, o que depende de permissão de admin no
+repositório.
 
 Para ver o que ficou descoberto:
 
