@@ -1,0 +1,180 @@
+/* Lista a esquerda, ficha a direita; uma coluna em tela estreita. */
+.com-detalhe {
+  display: grid;
+  gap: var(--e-5);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 900px) {
+  .com-detalhe {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+    align-items: start;
+  }
+}
+
+.abas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e-1);
+  margin-bottom: var(--e-4);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.abas__item {
+  min-height: 44px;
+  padding: var(--e-2) var(--e-3);
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  color: var(--cor-texto-fraco);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.abas__item[aria-selected='true'] {
+  border-bottom-color: var(--cor-marca);
+  color: var(--cor-marca);
+}
+
+.ocorrencia-item {
+  display: grid;
+  gap: var(--e-2);
+  width: 100%;
+  border-left: 4px solid var(--cor-borda-forte);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ocorrencia-item--ativa {
+  border-left-color: var(--cor-marca);
+  background: var(--cor-marca-fraca);
+}
+
+.ocorrencia-item__selos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e-2);
+}
+
+.ocorrencia-item__ponto {
+  font-weight: 700;
+}
+
+.ocorrencia-item__violados {
+  display: grid;
+  gap: var(--e-1);
+  font-size: var(--t-pequeno);
+}
+
+.ocorrencia-item__limite {
+  color: var(--cor-texto-fraco);
+}
+
+/* Ficha ------------------------------------------------------------------- */
+
+.detalhe {
+  padding: var(--e-4);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+  box-shadow: var(--sombra);
+}
+
+.detalhe__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e-3);
+  margin-bottom: var(--e-3);
+}
+
+.detalhe__topo h2 {
+  margin: 0;
+}
+
+.detalhe__selos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e-2);
+  margin-bottom: var(--e-3);
+}
+
+.detalhe__dados {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--e-1) var(--e-3);
+  margin: var(--e-4) 0;
+  font-size: var(--t-pequeno);
+}
+
+.detalhe__dados dt {
+  color: var(--cor-texto-fraco);
+}
+
+.detalhe__dados dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.detalhe__mensagem {
+  display: block;
+  margin-top: var(--e-1);
+  font-size: var(--t-pequeno);
+  font-weight: 400;
+  color: var(--cor-texto-fraco);
+}
+
+.detalhe__sem-tratativa {
+  color: var(--cor-texto-fraco);
+}
+
+.linha-tempo {
+  margin: 0 0 var(--e-5);
+  padding-left: var(--e-5);
+  display: grid;
+  gap: var(--e-3);
+}
+
+.linha-tempo__acao {
+  margin: 0;
+}
+
+.linha-tempo__meta {
+  margin: 0;
+  font-size: var(--t-pequeno);
+  color: var(--cor-texto-fraco);
+}
+
+/* Formulario de tratativa ------------------------------------------------- */
+
+.tratativa-form {
+  padding-top: var(--e-4);
+  border-top: 1px solid var(--cor-borda);
+}
+
+.tratativa-form h3 {
+  margin-bottom: var(--e-3);
+}
+
+.tratativa-form__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e-2);
+}
+
+.tratativa-form__aviso {
+  margin: var(--e-3) 0 0;
+  color: var(--cor-critica);
+  font-size: var(--t-pequeno);
+  font-weight: 600;
+}
+
+.tratativa-encerrada {
+  margin: var(--e-4) 0 0;
+  padding: var(--e-3);
+  border-top: 1px solid var(--cor-borda);
+  color: var(--cor-conforme);
+  font-weight: 600;
+}
