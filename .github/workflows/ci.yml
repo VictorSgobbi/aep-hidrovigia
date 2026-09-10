@@ -68,3 +68,122 @@ jobs:
           name: resultado-testes
           path: target/surefire-reports/
           if-no-files-found: warn
+
+  # Job separado, e nao um passo do job acima, por tres motivos:
+  #
+  # 1. "Testes e cobertura" e o nome do status check exigido pela protecao da
+  #    branch main. Nao editar aquele job e a garantia de nao derrubar a regra.
+  # 2. Uma falha de lint nao deve aparecer como "cobertura reprovada".
+  # 3. Roda em paralelo, entao o tempo total da CI nao muda.
+  #
+  # ATENCAO: a protecao da branch precisa passar a exigir OS DOIS nomes de
+  # check. Enquanto so "Testes e cobertura" estiver na regra, este job e
+  # informativo e um PR com o front quebrado ainda pode ser mergeado.
+  #
+  # Nao usar `paths:` para pular este job em PR que so mexe no backend: um
+  # required check pulado por filtro nunca reporta status, e o PR fica preso
+  # em "waiting for status" para sempre. Parece economia e nao e.
+  frontend:
+    name: Frontend (lint, tipos e testes)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      # A conversao de datetime-local para Instant depende do fuso. O mesmo
+      # valor esta no test.env do vite.config.ts; aqui e cinto e suspensorio.
+      TZ: America/Sao_Paulo
+
+    steps:
+      - name: Baixa o codigo
+        uses: actions/checkout@v4
+
+      - name: Configura o Node
+        uses: actions/setup-node@v4
+        with:
+          # Le a versao do .nvmrc: a CI e a maquina de cada um usam a mesma.
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instala as dependencias exatamente como no lockfile
+        run: npm ci
+
+      - name: Verifica os tipos
+        # `vite build` nao checa tipo: sem este passo o TypeScript e decoracao.
+        run: npm run tipos
+
+      - name: Verifica o lint
+        run: npm run lint
+
+      - name: Executa os testes com cobertura
+        run: npm run test:ci
+
+      # Mesmo raciocinio do passo dos testes de integracao: suite que nao roda
+      # e pior que suite que falha, porque o build fica verde. O Vitest passa
+      # sem testes quando o glob nao casa, e um .skip esquecido nao reprova.
+      - name: Confirma que a suite do frontend realmente rodou
+        run: |
+          node -e '
+            const relatorio = require("./vitest-report.json");
+            const MINIMO = 30;
+            const pulados =
+              (relatorio.numPendingTests ?? 0) + (relatorio.numTodoTests ?? 0);
+            console.log(
+              `Frontend: ${relatorio.numTotalTests} testes, ${pulados} pulados, ` +
+              `${relatorio.numFailedTests} falharam.`
+            );
+            if (!relatorio.numTotalTests || relatorio.numTotalTests < MINIMO) {
+              console.log(`::error::Rodaram ${relatorio.numTotalTests} testes; o minimo combinado e ${MINIMO}.`);
+              process.exit(1);
+            }
+            if (pulados !== 0) {
+              console.log("::error::Ha teste pulado (.skip/.todo) na suite do frontend.");
+              process.exit(1);
+            }
+          '
+
+      - name: Publica o relatorio de cobertura do frontend
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-cobertura-frontend
+          path: frontend/coverage/
+          if-no-files-found: warn
+
+  # Prova automatica de que a demonstracao funciona: sem isto, "o jar builda"
+  # e "a interface esta dentro do jar" sao duas coisas diferentes, e a segunda
+  # so seria descoberta na hora de gravar.
+  empacotamento:
+    name: Empacotamento com a interface
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixa o codigo
+        uses: actions/checkout@v4
+
+      - name: Configura o JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Configura o Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Empacota com o perfil do frontend
+        run: ./mvnw --batch-mode -Pfrontend -DskipTests package
+
+      - name: Confirma que a SPA entrou no jar
+        run: |
+          if ! unzip -l target/hidrovigia-1.0.0.jar \
+               | grep -q 'BOOT-INF/classes/static/index.html'; then
+            echo "::error::A interface nao foi empacotada no jar (-Pfrontend quebrado?)."
+            exit 1
+          fi
+          echo "index.html presente em BOOT-INF/classes/static/."
