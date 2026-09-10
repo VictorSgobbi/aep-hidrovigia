@@ -1,5 +1,7 @@
 package br.com.hidrovigia.api;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 
 import br.com.hidrovigia.api.dto.OcorrenciaDto;
@@ -25,22 +27,27 @@ import org.springframework.web.bind.annotation.RestController;
 public class OcorrenciaController {
 
     private final OcorrenciaService servico;
+    private final Clock relogio;
 
-    public OcorrenciaController(OcorrenciaService servico) {
+    public OcorrenciaController(OcorrenciaService servico, Clock relogio) {
         this.servico = servico;
+        this.relogio = relogio;
     }
 
     @GetMapping
     @Operation(summary = "Lista ocorrencias; sem filtro devolve as pendentes por prazo")
     public List<OcorrenciaDto.Saida> listar(
             @RequestParam(required = false) StatusOcorrencia status) {
-        return servico.listar(status).stream().map(OcorrenciaDto.Saida::de).toList();
+        Instant agora = relogio.instant();
+        return servico.listar(status).stream()
+                .map(ocorrencia -> OcorrenciaDto.Saida.de(ocorrencia, agora))
+                .toList();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Busca uma ocorrencia pelo identificador")
     public OcorrenciaDto.Saida buscar(@PathVariable String id) {
-        return OcorrenciaDto.Saida.de(servico.buscarPorId(id));
+        return OcorrenciaDto.Saida.de(servico.buscarPorId(id), relogio.instant());
     }
 
     @PostMapping("/{id}/tratativas")
@@ -49,7 +56,7 @@ public class OcorrenciaController {
             @PathVariable String id,
             @Valid @RequestBody OcorrenciaDto.TratativaEntrada entrada) {
         return OcorrenciaDto.Saida.de(
-                servico.registrarTratativa(id, entrada.acao(), entrada.por()));
+                servico.registrarTratativa(id, entrada.acao(), entrada.por()), relogio.instant());
     }
 
     @PostMapping("/{id}/resolucao")
@@ -57,6 +64,7 @@ public class OcorrenciaController {
     public OcorrenciaDto.Saida resolver(
             @PathVariable String id,
             @Valid @RequestBody OcorrenciaDto.TratativaEntrada entrada) {
-        return OcorrenciaDto.Saida.de(servico.resolver(id, entrada.acao(), entrada.por()));
+        return OcorrenciaDto.Saida.de(
+                servico.resolver(id, entrada.acao(), entrada.por()), relogio.instant());
     }
 }

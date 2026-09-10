@@ -1,5 +1,6 @@
 package br.com.hidrovigia.repositorio;
 
+import java.time.Instant;
 import java.util.List;
 
 import br.com.hidrovigia.Fixtures;
@@ -8,6 +9,7 @@ import br.com.hidrovigia.dominio.ocorrencia.Ocorrencia;
 import br.com.hidrovigia.dominio.ocorrencia.StatusOcorrencia;
 import br.com.hidrovigia.dominio.parametro.ResultadoParametro;
 import br.com.hidrovigia.dominio.ponto.PontoMonitoramento;
+import br.com.hidrovigia.dominio.ponto.TipoFonte;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.MongoDBContainer;
@@ -23,6 +26,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Integracao real contra um MongoDB 7 efemero.
@@ -33,9 +37,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * <p>A classe inteira e ignorada em maquina sem Docker
  * ({@code disabledWithoutDocker}), entao o build continua verde e a cobertura
- * exigida e sustentada pelos testes de unidade.
+ * exigida e sustentada pelos testes de unidade. Na CI, onde Docker existe, um
+ * passo do workflow reprova o build se estes testes tiverem sido pulados — sem
+ * isso, uma falha de infraestrutura passaria como "verde".
+ *
+ * <p>O perfil {@code test} desliga a criacao automatica de indices, mas esta
+ * classe a religa: sem indice nao existe garantia de unicidade para testar.
  */
-@DataMongoTest
+@DataMongoTest(properties = "spring.data.mongodb.auto-index-creation=true")
 @ActiveProfiles("test")
 @Testcontainers(disabledWithoutDocker = true)
 @DisplayName("Integracao dos repositorios com MongoDB")
@@ -91,8 +100,26 @@ class RepositoriosMongoIntegracaoTest {
     }
 
     @Test
-    @DisplayName("respeita a unicidade do codigo e o filtro de ativos")
-    void codigoUnicoEFiltroDeAtivos() {
+    @DisplayName("o indice unico do banco recusa um segundo ponto com o mesmo codigo")
+    void codigoUnicoNoBanco() {
+        pontos.save(Fixtures.pontoNovo());
+
+        PontoMonitoramento mesmoCodigo = PontoMonitoramento.cadastrar("PMA-001",
+                "Outro poco, mesmo codigo", TipoFonte.NASCENTE, 10,
+                Fixtures.localizacao(), Fixtures.responsavel());
+
+        // A ultima linha de defesa e o indice unico, nao o existsByCodigo do
+        // servico: duas requisicoes concorrentes passam pela checagem do
+        // servico antes de qualquer uma gravar.
+        assertThatThrownBy(() -> pontos.save(mesmoCodigo))
+                .isInstanceOf(DuplicateKeyException.class);
+
+        assertThat(pontos.findAll()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("respeita o filtro de ativos sem apagar o ponto desativado")
+    void filtroDeAtivos() {
         PontoMonitoramento ativo = pontos.save(Fixtures.pontoNovo());
 
         PontoMonitoramento desativado = PontoMonitoramento.cadastrar("PMA-002", "Cisterna",
@@ -111,7 +138,7 @@ class RepositoriosMongoIntegracaoTest {
     void gravaAnaliseComArrayDeParametros() {
         PontoMonitoramento ponto = pontos.save(Fixtures.pontoNovo());
         Analise salva = analises.save(Analise.registrar(ponto, "Tecnico Bruno",
-                java.time.Instant.now().minusSeconds(3600), Fixtures.parametrosConformes()));
+                Fixtures.REFERENCIA, Fixtures.parametrosConformes()));
 
         Analise lida = analises.findById(salva.getId()).orElseThrow();
 
@@ -128,10 +155,11 @@ class RepositoriosMongoIntegracaoTest {
     @DisplayName("conta analises pelo campo aninhado resultado.conforme")
     void contaPeloResultadoConsolidado() {
         PontoMonitoramento ponto = pontos.save(Fixtures.pontoNovo());
-        java.time.Instant agora = java.time.Instant.now().minusSeconds(600);
+        Instant coletadoEm = Fixtures.REFERENCIA;
 
-        analises.save(Analise.registrar(ponto, "Bruno", agora, Fixtures.parametrosConformes()));
-        analises.save(Analise.registrar(ponto, "Bruno", agora,
+        analises.save(Analise.registrar(ponto, "Bruno", coletadoEm,
+                Fixtures.parametrosConformes()));
+        analises.save(Analise.registrar(ponto, "Bruno", coletadoEm,
                 Fixtures.parametrosComViolacaoCritica()));
 
         assertThat(analises.countByResultadoConforme(true)).isEqualTo(1);
@@ -163,11 +191,25 @@ class RepositoriosMongoIntegracaoTest {
     }
 
     @Test
+    @DisplayName("uma analise reprovada nao aceita uma segunda ocorrencia")
+    void umaOcorrenciaPorAnalise() {
+        ocorrencias.save(Fixtures.ocorrenciaAberta("analise-2"));
+
+        assertThatThrownBy(() -> ocorrencias.save(Fixtures.ocorrenciaAberta("analise-2")))
+                .isInstanceOf(DuplicateKeyException.class);
+
+        // A consulta devolve Optional justamente porque essa e a invariante.
+        assertThat(ocorrencias.findByAnaliseId("analise-2")).isPresent();
+        assertThat(ocorrencias.findAll()).hasSize(1);
+    }
+
+    @Test
     @DisplayName("filtra ocorrencias por status e pela analise de origem")
     void consultasDeOcorrencia() {
-        Ocorrencia aberta = ocorrencias.save(Fixtures.ocorrenciaAberta());
+        Ocorrencia aberta = ocorrencias.save(Fixtures.ocorrenciaAberta("analise-2"));
 
-        Ocorrencia outra = Fixtures.ocorrenciaAberta();
+        // Analise distinta: duas ocorrencias para a mesma analise nao existem.
+        Ocorrencia outra = Fixtures.ocorrenciaAberta("analise-3");
         outra.resolver("Contraprova conforme", "Victor");
         ocorrencias.save(outra);
 

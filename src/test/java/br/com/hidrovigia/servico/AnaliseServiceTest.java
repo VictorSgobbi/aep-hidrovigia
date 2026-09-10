@@ -23,18 +23,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("Servico de registro de analises")
 class AnaliseServiceTest {
 
@@ -50,13 +48,19 @@ class AnaliseServiceTest {
     private final CatalogoParametros catalogo = CatalogoParametros.padraoBrasileiro();
     private AnaliseService servico;
 
-    private final Instant ontem = Instant.now().minus(1, ChronoUnit.DAYS);
+    private final Instant ontem = Fixtures.REFERENCIA.minus(1, ChronoUnit.DAYS);
 
     @BeforeEach
     void preparar() {
         servico = new AnaliseService(repositorio, pontoService, ocorrenciaService, catalogo);
-        when(pontoService.buscarPorCodigo("PMA-001")).thenReturn(Fixtures.pontoPersistido());
-        when(repositorio.save(any(Analise.class))).thenAnswer(chamada -> {
+
+        // Estes dois stubs servem o caminho de registro. Os testes de consulta
+        // nao passam por eles, entao sao marcados como lenient um a um — em vez
+        // de afrouxar a classe inteira e perder a deteccao de stub inutil nos
+        // demais casos.
+        lenient().when(pontoService.buscarPorCodigo("PMA-001"))
+                .thenReturn(Fixtures.pontoPersistido());
+        lenient().when(repositorio.save(any(Analise.class))).thenAnswer(chamada -> {
             Analise recebida = chamada.getArgument(0);
             return new Analise("analise-salva", recebida.getPontoId(), recebida.getPontoCodigo(),
                     recebida.getColetadoEm(), recebida.getColetor(), recebida.getParametros(),

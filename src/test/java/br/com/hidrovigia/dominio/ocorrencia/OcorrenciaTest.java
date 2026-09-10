@@ -100,8 +100,29 @@ class OcorrenciaTest {
         ocorrencia.registrarTratativa("Desinfeccao do reservatorio", "Bruno");
         ocorrencia.resolver("Contraprova conforme", "Victor");
 
-        assertThat(ocorrencia.getTratativas()).hasSize(3);
         assertThat(ocorrencia.getStatus()).isEqualTo(StatusOcorrencia.RESOLVIDA);
+        assertThat(ocorrencia.getTratativas())
+                .extracting(Tratativa::acao)
+                .containsExactly("Ponto isolado da rede", "Desinfeccao do reservatorio",
+                        "Contraprova conforme");
+        assertThat(ocorrencia.getTratativas())
+                .as("cada acao grava o status que ela produziu")
+                .extracting(Tratativa::statusResultante)
+                .containsExactly(StatusOcorrencia.EM_TRATATIVA, StatusOcorrencia.EM_TRATATIVA,
+                        StatusOcorrencia.RESOLVIDA);
+    }
+
+    @Test
+    @DisplayName("aceita quantas tratativas forem necessarias antes de resolver")
+    void aceitaMuitasTratativas() {
+        Ocorrencia ocorrencia = Fixtures.ocorrenciaAberta();
+
+        for (int i = 1; i <= 5; i++) {
+            ocorrencia.registrarTratativa("Acao " + i, "Leonardo");
+        }
+
+        assertThat(ocorrencia.getTratativas()).hasSize(5);
+        assertThat(ocorrencia.getStatus()).isEqualTo(StatusOcorrencia.EM_TRATATIVA);
     }
 
     @Test
@@ -136,7 +157,8 @@ class OcorrenciaTest {
     @DisplayName("exige analise persistida e classificador informado")
     void exigePreCondicoes() {
         Analise semId = Analise.registrar(Fixtures.pontoPersistido(), "Tecnico",
-                Instant.now().minus(1, ChronoUnit.HOURS), Fixtures.parametrosComViolacaoCritica());
+                Fixtures.REFERENCIA.minus(1, ChronoUnit.HOURS),
+                Fixtures.parametrosComViolacaoCritica());
 
         assertThatThrownBy(() -> Ocorrencia.abrir(semId,
                 new ClassificadorPorRiscoSanitario(), List.of()))
@@ -184,13 +206,33 @@ class OcorrenciaTest {
         assertThat(StatusOcorrencia.ABERTA.proximosPossiveis())
                 .containsExactlyInAnyOrder(StatusOcorrencia.EM_TRATATIVA, StatusOcorrencia.RESOLVIDA);
         assertThat(StatusOcorrencia.EM_TRATATIVA.proximosPossiveis())
-                .containsExactly(StatusOcorrencia.RESOLVIDA);
+                .containsExactlyInAnyOrder(StatusOcorrencia.EM_TRATATIVA, StatusOcorrencia.RESOLVIDA);
         assertThat(StatusOcorrencia.RESOLVIDA.proximosPossiveis()).isEmpty();
 
-        assertThat(StatusOcorrencia.ABERTA.podeTransicionarPara(StatusOcorrencia.ABERTA)).isFalse();
         assertThat(StatusOcorrencia.ABERTA.podeTransicionarPara(null)).isFalse();
         assertThat(StatusOcorrencia.ABERTA.finalizada()).isFalse();
         assertThat(StatusOcorrencia.EM_TRATATIVA.getDescricao()).isEqualTo("Em tratativa");
+    }
+
+    @Test
+    @DisplayName("permanecer em tratativa e o unico laco permitido no ciclo de vida")
+    void unicoLacoPermitido() {
+        assertThat(StatusOcorrencia.EM_TRATATIVA.podeTransicionarPara(StatusOcorrencia.EM_TRATATIVA))
+                .as("acumular tratativas na mesma ocorrencia")
+                .isTrue();
+
+        assertThat(StatusOcorrencia.ABERTA.podeTransicionarPara(StatusOcorrencia.ABERTA))
+                .as("nao existe reabrir o que ja esta aberto")
+                .isFalse();
+        assertThat(StatusOcorrencia.RESOLVIDA.podeTransicionarPara(StatusOcorrencia.RESOLVIDA))
+                .as("nao existe resolver duas vezes")
+                .isFalse();
+        assertThat(StatusOcorrencia.EM_TRATATIVA.podeTransicionarPara(StatusOcorrencia.ABERTA))
+                .as("nao existe voltar para aberta")
+                .isFalse();
+        assertThat(StatusOcorrencia.RESOLVIDA.podeTransicionarPara(StatusOcorrencia.EM_TRATATIVA))
+                .as("nao existe reabrir uma resolvida")
+                .isFalse();
     }
 
     @Test

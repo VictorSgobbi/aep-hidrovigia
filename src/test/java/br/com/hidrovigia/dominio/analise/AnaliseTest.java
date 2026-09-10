@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class AnaliseTest {
 
     private final PontoMonitoramento ponto = Fixtures.pontoPersistido();
-    private final Instant ontem = Instant.now().minus(1, ChronoUnit.DAYS);
+    private final Instant ontem = Fixtures.REFERENCIA.minus(1, ChronoUnit.DAYS);
 
     @Test
     @DisplayName("consolida como conforme quando nenhum parametro reprova")
@@ -64,6 +64,8 @@ class AnaliseTest {
     @Test
     @DisplayName("recusa coleta com data no futuro")
     void recusaColetaFutura() {
+        // Relativo ao relogio real de proposito: e contra ele que o agregado
+        // compara a data de coleta.
         Instant amanha = Instant.now().plus(1, ChronoUnit.DAYS);
 
         assertThatThrownBy(() -> Analise.registrar(ponto, "Tecnico", amanha,

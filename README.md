@@ -208,13 +208,17 @@ ponto de extensão real, e a ocorrência grava **qual política a classificou**.
 | Ferramenta | Versão | Onde obter |
 |---|---|---|
 | JDK | 21 | [Eclipse Temurin](https://adoptium.net/temurin/releases/?version=21) |
-| Maven | 3.9+ | [maven.apache.org](https://maven.apache.org/download.cgi) |
 | Docker | com Compose v2 | [Docker Desktop](https://www.docker.com/products/docker-desktop/) |
 
-No Windows, os dois primeiros saem em um comando:
+**Maven não precisa ser instalado.** O repositório traz o
+[Maven Wrapper](https://maven.apache.org/wrapper/) (`mvnw`), que baixa a versão
+correta na primeira execução — todo mundo compila com o mesmo Maven que a CI.
+Use `./mvnw` no Linux e macOS e `mvnw.cmd` no Windows.
+
+No Windows, o único pré-requisito de linguagem sai em um comando:
 
 ```bash
-winget install EclipseAdoptium.Temurin.21.JDK Apache.Maven
+winget install EclipseAdoptium.Temurin.21.JDK
 ```
 
 ### 1️⃣ Clone o repositório
@@ -239,7 +243,7 @@ ao `docker compose down`.
 ### 3️⃣ Rode a aplicação
 
 ```bash
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
 Na primeira subida a base é populada com **3 pontos e 5 análises de demonstração**,
@@ -247,7 +251,7 @@ cobrindo os quatro desfechos possíveis (conforme, média, alta e crítica). Par
 a carga:
 
 ```bash
-HIDROVIGIA_CARGA_DEMONSTRACAO=false mvn spring-boot:run
+HIDROVIGIA_CARGA_DEMONSTRACAO=false ./mvnw spring-boot:run
 ```
 
 ### 4️⃣ Abra a documentação interativa
@@ -278,7 +282,7 @@ docker compose --profile ferramentas down
 ### Comando único e reproduzível
 
 ```bash
-mvn clean verify
+./mvnw clean verify
 ```
 
 Este comando **compila, roda a suíte inteira, gera o relatório de cobertura e reprova o
@@ -294,7 +298,7 @@ start target/site/jacoco/index.html
 Para gerar o relatório sem a trava de cobertura:
 
 ```bash
-mvn clean test
+./mvnw clean test
 ```
 
 ### Como a trava está configurada
@@ -317,23 +321,45 @@ Ficam fora da medição apenas a classe de bootstrap (`HidroVigiaApplication`) e
 
 ### O que é testado
 
+São **186 testes** em 12 classes, distribuídos em quatro níveis:
+
 | Nível | Ferramenta | Classes | O que cobre |
 |---|---|:---:|---|
 | **Domínio** | JUnit 5 + AssertJ | 5 | Limites da norma (conforme, no limite e violado por parâmetro), invariantes dos agregados, ciclo de vida da ocorrência |
 | **Aplicação** | Mockito | 4 | Orquestração dos serviços com repositórios simulados |
-| **Web** | MockMvc | 4 | Contratos HTTP (201/400/404/409/422) e formato do JSON |
-| **Integração** | Testcontainers + MongoDB 7 | 1 | Round-trip dos subdocumentos e consultas por campo aninhado |
+| **Web** | MockMvc | 4 | Contratos HTTP (201/400/404/409/422), header `Location` e formato do JSON |
+| **Integração** | Testcontainers + MongoDB 7 | 1 | Round-trip dos subdocumentos, consultas por campo aninhado e os índices únicos |
 
-Os testes de integração são **ignorados automaticamente em máquina sem Docker**
-(`@Testcontainers(disabledWithoutDocker = true)`), então o build continua verde. A
-cobertura mínima é sustentada pelos testes de unidade, que não dependem de
-infraestrutura nenhuma.
+Nenhuma data de teste vem de `Instant.now()`: todas derivam de `Fixtures.REFERENCIA`,
+um instante fixo, e quem precisa de "agora" recebe um `Clock` parado. Fixture ancorada
+no relógio da máquina é a origem clássica de teste que falha uma vez a cada dez.
+
+### Testes de integração: rodam mesmo
+
+Os testes de integração se desabilitam sozinhos em máquina sem Docker
+(`@Testcontainers(disabledWithoutDocker = true)`). Isso é conveniente localmente, mas
+**perigoso em CI**: um problema de infraestrutura pularia a única classe que encosta no
+MongoDB e o build passaria verde sem ter testado o banco. Por isso o workflow tem um
+passo que lê o relatório do Surefire e **reprova o build se essa classe tiver sido
+pulada**.
+
+Duas armadilhas de ambiente já estão resolvidas no `pom.xml`:
+
+| Sintoma | Causa | Correção aplicada |
+|---|---|---|
+| `Could not find a valid Docker environment` com Docker rodando | O docker-java negocia API < 1.40, e o Docker Engine 29 recusa com HTTP 400 | `api.version=1.41` no Surefire — aceita por engines do Docker 20.10 ao 29 |
+| Testcontainers antigo demais | Boot 3.3.5 gerencia a versão 1.19.8 | `testcontainers.version` sobreposta para 1.21.3 |
+
+Se ainda assim os testes forem pulados, rode `docker info` e confira se o daemon
+responde para o seu usuário.
 
 ### Integração contínua
 
-O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda `mvn clean verify`
-a cada push e pull request na `main`, e publica o relatório JaCoCo como artefato do
-workflow. O runner do GitHub tem Docker, então os testes de integração também executam lá.
+O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda
+`./mvnw clean verify` a cada push e pull request na `main`, confirma que os testes de
+integração executaram e publica o relatório JaCoCo como artefato. O merge na `main`
+depende dessa verificação passar — veja
+[CONTRIBUTING.md](CONTRIBUTING.md#proteção-da-branch-main).
 
 ---
 
@@ -346,7 +372,7 @@ em todas elas**.
 |---|---|---|---|
 | `pontos_monitoramento` | `localizacao`, `responsavel` | — | `codigo` (único) |
 | `analises` | `parametros[]`, `resultado` | `pontoId` | `pontoId`, `coletadoEm` |
-| `ocorrencias` | `parametrosViolados[]`, `tratativas[]` | `analiseId`, `pontoId` | `analiseId`, `pontoId` |
+| `ocorrencias` | `parametrosViolados[]`, `tratativas[]` | `analiseId`, `pontoId` | `analiseId` (**único**), `pontoId` |
 
 ### Relacionamentos
 
@@ -359,6 +385,11 @@ pontos_monitoramento (1) ──────< (N) analises
 
 Uma análise reprovada gera **exatamente uma** ocorrência. Uma análise conforme não gera
 nenhuma.
+
+Essa cardinalidade não é só uma intenção documentada: `analiseId` tem **índice único**.
+O serviço checa antes e devolve `409`, e o índice é o que segura o caso de duas
+requisições concorrentes — sem ele, a consulta `findByAnaliseId`, que devolve
+`Optional`, quebraria ao encontrar duas ocorrências para a mesma análise.
 
 ### Exemplo de documento — `analises`
 
@@ -507,10 +538,19 @@ classe existente muda.
 ### Ciclo de vida da ocorrência
 
 ```
-   ABERTA ─────────► EM_TRATATIVA ─────────► RESOLVIDA
-      │                                          ▲
-      └──────────────────────────────────────────┘
+                        ┌──── nova tratativa ────┐
+                        │                        │
+                        ▼                        │
+   ABERTA ─────────► EM_TRATATIVA ───────────────┘
+      │                    │
+      │                    ▼
+      └──────────────► RESOLVIDA
 ```
+
+`EM_TRATATIVA` volta para si mesmo porque a vigilância registra **quantas ações forem
+necessárias** antes de encerrar a pendência, e cada ação grava uma tratativa no
+histórico. `ABERTA` não tem esse laço: a primeira ação registrada é justamente o que
+tira a ocorrência da fila de não-iniciadas.
 
 `RESOLVIDA` não tem saída. Não existe caminho no código para resolver duas vezes nem
 para reabrir.
@@ -605,6 +645,7 @@ aep-hidrovigia/
 │   │   └── resources/application.yml
 │   └── test/java/br/com/hidrovigia/  12 classes de teste + Fixtures
 ├── docker-compose.yml                MongoDB 7 + Mongo Express opcional
+├── mvnw · mvnw.cmd · .mvn/           Maven Wrapper — dispensa instalar Maven
 ├── pom.xml                           Dependências e trava de cobertura
 ├── CONTRIBUTING.md                   Convenção de commits e fluxo de trabalho
 ├── LICENSE                           MIT
@@ -681,7 +722,7 @@ Onde encontrar a evidência de cada critério da 1ª entrega.
 | Banco de dados NoSQL | 0,1 | [Estrutura do banco](#-estrutura-do-banco-nosql) — 3 coleções, relacionamento e subdocumentos aninhados em todas |
 | POO e organização do código | 0,1 | [Arquitetura](#-arquitetura-e-orientação-a-objetos) — Template Method, polimorfismo, Strategy, State, objetos de valor |
 | GitHub e versionamento | 0,1 | Histórico em Conventional Commits, tag `v1.0-entrega1`, CI verde |
-| Testes automatizados | 0,1 | 12 classes de teste em 4 níveis — `mvn clean verify` |
+| Testes automatizados | 0,1 | 186 testes em 12 classes e 4 níveis — `./mvnw clean verify` |
 | **Cobertura ≥ 70%** | 0,1 | JaCoCo travando o build; relatório em `target/site/jacoco/index.html` |
 | Vídeo de demonstração | 0,3 | Link em [Identificação](#-identificação) |
 
@@ -692,7 +733,7 @@ Onde encontrar a evidência de cada critério da 1ª entrega.
 | Utilização efetiva de banco NoSQL | ✅ MongoDB 7, três coleções |
 | Linguagem OO com aplicação efetiva do paradigma | ✅ Java 21, hierarquia polimórfica e padrões |
 | Código versionado em repositório GitHub acessível | ✅ Público |
-| Testes automatizados executáveis | ✅ `mvn clean verify` |
+| Testes automatizados executáveis | ✅ `./mvnw clean verify` (Maven Wrapper incluso) |
 | Cobertura mínima de 70% com evidência reproduzível | ✅ JaCoCo com trava no build |
 | Documentação técnica suficiente | ✅ README + `docs/` |
 | PoC executável | ✅ Docker Compose + Spring Boot |

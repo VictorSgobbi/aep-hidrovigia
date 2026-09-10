@@ -72,6 +72,19 @@ class OcorrenciaServiceTest {
     }
 
     @Test
+    @DisplayName("recusa abrir uma segunda ocorrencia para a mesma analise")
+    void recusaOcorrenciaDuplicada() {
+        when(repositorio.findByAnaliseId("analise-2")).thenReturn(
+                Optional.of(Fixtures.ocorrenciaPersistida("oc-1", StatusOcorrencia.ABERTA)));
+
+        assertThatThrownBy(() -> servico.abrirPara(Fixtures.analiseNaoConforme()))
+                .isInstanceOf(RegraNegocioException.class)
+                .hasMessageContaining("ja possui ocorrencia");
+
+        verify(repositorio, never()).save(any());
+    }
+
+    @Test
     @DisplayName("recusa abrir ocorrencia para analise conforme")
     void recusaAnaliseConforme() {
         assertThatThrownBy(() -> servico.abrirPara(Fixtures.analiseConforme()))
@@ -133,6 +146,21 @@ class OcorrenciaServiceTest {
 
         assertThat(atualizada.getStatus()).isEqualTo(StatusOcorrencia.EM_TRATATIVA);
         assertThat(atualizada.getTratativas()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("aceita tratativas sucessivas na mesma ocorrencia")
+    void registraTratativasSucessivas() {
+        Ocorrencia ocorrencia = Fixtures.ocorrenciaPersistida("oc-1", StatusOcorrencia.ABERTA);
+        when(repositorio.findById("oc-1")).thenReturn(Optional.of(ocorrencia));
+        when(repositorio.save(ocorrencia)).thenReturn(ocorrencia);
+
+        servico.registrarTratativa("oc-1", "Ponto isolado da rede", "Leonardo");
+        servico.registrarTratativa("oc-1", "Desinfeccao do reservatorio", "Bruno");
+        Ocorrencia atualizada = servico.registrarTratativa("oc-1", "Contraprova coletada", "Victor");
+
+        assertThat(atualizada.getTratativas()).hasSize(3);
+        assertThat(atualizada.getStatus()).isEqualTo(StatusOcorrencia.EM_TRATATIVA);
     }
 
     @Test

@@ -24,6 +24,14 @@
     <springdoc.version>2.6.0</springdoc.version>
     <jacoco.version>0.8.12</jacoco.version>
     <cobertura.minima>0.70</cobertura.minima>
+    <!--
+      Sobrepoe a versao gerenciada pelo Spring Boot 3.3.5 (1.19.8). O
+      docker-java embutido naquela versao negocia uma versao de API que o
+      Docker Engine 29 ja nao aceita, e o Testcontainers responde marcando o
+      ambiente como "sem Docker" — os testes de integracao eram pulados em
+      silencio em qualquer maquina com Docker atual.
+    -->
+    <testcontainers.version>1.21.3</testcontainers.version>
   </properties>
 
   <dependencies>
@@ -79,6 +87,29 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+
+      <!--
+        Fixa a versao da API do Docker que o Testcontainers negocia.
+
+        Sem isto, o docker-java pede uma versao antiga (< 1.40) que o Docker
+        Engine 29 recusa com HTTP 400. O Testcontainers le a recusa como
+        "nao ha Docker nesta maquina" e, por causa de disabledWithoutDocker,
+        PULA os testes de integracao sem falhar: o build fica verde sem ter
+        encostado no banco. Foi exatamente o que aconteceu aqui, e escondeu um
+        defeito real (duas ocorrencias para a mesma analise).
+
+        1.41 e aceita por todo engine do Docker 20.10 (2020) ao 29, entao serve
+        igual na maquina de cada um e no runner da CI.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <api.version>1.41</api.version>
+          </systemPropertyVariables>
+        </configuration>
       </plugin>
 
       <!--

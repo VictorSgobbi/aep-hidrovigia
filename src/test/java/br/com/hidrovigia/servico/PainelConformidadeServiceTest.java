@@ -51,7 +51,7 @@ class PainelConformidadeServiceTest {
         when(ocorrenciaRepositorio.findByStatusNotOrderByPrazoLimiteAsc(StatusOcorrencia.RESOLVIDA))
                 .thenReturn(List.of());
 
-        IndicadoresConformidade indicadores = painelCom(Clock.systemUTC()).geral();
+        IndicadoresConformidade indicadores = painelCom(Fixtures.relogioFixo()).geral();
 
         assertThat(indicadores.escopo()).isEqualTo("geral");
         assertThat(indicadores.totalAnalises()).isEqualTo(20L);
@@ -69,7 +69,7 @@ class PainelConformidadeServiceTest {
         when(ocorrenciaRepositorio.findByStatusNotOrderByPrazoLimiteAsc(StatusOcorrencia.RESOLVIDA))
                 .thenReturn(List.of());
 
-        IndicadoresConformidade indicadores = painelCom(Clock.systemUTC()).geral();
+        IndicadoresConformidade indicadores = painelCom(Fixtures.relogioFixo()).geral();
 
         assertThat(indicadores.totalAnalises()).isZero();
         assertThat(indicadores.percentualConformidade()).isZero();
@@ -84,7 +84,7 @@ class PainelConformidadeServiceTest {
         when(ocorrenciaRepositorio.findByStatusNotOrderByPrazoLimiteAsc(StatusOcorrencia.RESOLVIDA))
                 .thenReturn(List.of());
 
-        assertThat(painelCom(Clock.systemUTC()).geral().percentualConformidade())
+        assertThat(painelCom(Fixtures.relogioFixo()).geral().percentualConformidade())
                 .isEqualTo(66.67);
     }
 
@@ -134,7 +134,7 @@ class PainelConformidadeServiceTest {
                         Fixtures.ocorrenciaPersistida("oc-2", StatusOcorrencia.RESOLVIDA)));
 
         IndicadoresConformidade indicadores =
-                painelCom(Clock.systemUTC()).porPonto("PMA-001");
+                painelCom(Fixtures.relogioFixo()).porPonto("PMA-001");
 
         assertThat(indicadores.escopo()).isEqualTo("PMA-001");
         assertThat(indicadores.totalAnalises()).isEqualTo(10L);

@@ -75,7 +75,13 @@ public final class OcorrenciaDto {
             List<ParametroVioladoSaida> parametrosViolados,
             List<TratativaSaida> tratativas) {
 
-        public static Saida de(Ocorrencia ocorrencia) {
+        /**
+         * @param agora instante de referencia para decidir se o prazo venceu,
+         *              vindo do {@code Clock} injetado — e nao de
+         *              {@code Instant.now()} escondido aqui, que tornaria o
+         *              campo {@code vencida} impossivel de testar
+         */
+        public static Saida de(Ocorrencia ocorrencia, Instant agora) {
             return new Saida(
                     ocorrencia.getId(),
                     ocorrencia.getAnaliseId(),
@@ -87,7 +93,7 @@ public final class OcorrenciaDto {
                     ocorrencia.getStatus(),
                     ocorrencia.getAbertaEm(),
                     ocorrencia.getPrazoLimite(),
-                    ocorrencia.estaVencida(Instant.now()),
+                    ocorrencia.estaVencida(agora),
                     ocorrencia.getParametrosViolados().stream()
                             .map(ParametroVioladoSaida::de).toList(),
                     ocorrencia.getTratativas().stream().map(TratativaSaida::de).toList());

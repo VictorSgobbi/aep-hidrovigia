@@ -59,6 +59,21 @@ class CatalogoParametrosTest {
     }
 
     @Test
+    @DisplayName("preserva a ordem de declaracao, que e a ordem publicada pela API")
+    void preservaOrdemDeDeclaracao() {
+        // GET /api/painel/parametros expoe o catalogo nesta ordem. Um mapa
+        // imutavel da JDK (Map.copyOf) randomizaria a iteracao a cada execucao
+        // da JVM e deixaria a resposta da API instavel entre restarts.
+        assertThat(catalogo.todos())
+                .extracting(ParametroPotabilidade::getCodigo)
+                .containsExactly("ECOLI", "CTOT", "CRL", "PH",
+                        "TURB", "NITRATO", "FLUOR", "COR");
+        assertThat(catalogo.codigos())
+                .containsExactly("ECOLI", "CTOT", "CRL", "PH",
+                        "TURB", "NITRATO", "FLUOR", "COR");
+    }
+
+    @Test
     @DisplayName("aceita o codigo em qualquer caixa e com espacos")
     void normalizaCodigo() {
         assertThat(catalogo.buscar("  ecoli  ").getCodigo()).isEqualTo("ECOLI");

@@ -2,6 +2,7 @@ package br.com.hidrovigia.dominio.parametro;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,11 @@ public class CatalogoParametros {
                         "codigo de parametro duplicado no catalogo: " + parametro.getCodigo());
             }
         }
-        this.porCodigo = Map.copyOf(mapa);
+        // Nao usar Map.copyOf: os mapas imutaveis da JDK descartam a ordem de
+        // insercao e randomizam a iteracao a cada execucao da JVM. O catalogo e
+        // publicado em GET /api/painel/parametros, e a ordem em que a norma
+        // organiza os parametros (microbiologicos primeiro) tem significado.
+        this.porCodigo = Collections.unmodifiableMap(mapa);
     }
 
     /**
