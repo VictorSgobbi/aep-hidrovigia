@@ -1,0 +1,212 @@
+.coletas-layout {
+  display: grid;
+  gap: var(--e-5);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+@media (min-width: 980px) {
+  .coletas-layout {
+    grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+  }
+}
+
+.coleta-form__ponto {
+  margin: calc(-1 * var(--e-2)) 0 var(--e-4);
+  font-size: var(--t-pequeno);
+  color: var(--cor-texto-fraco);
+}
+
+.coleta-form__parametros {
+  margin: 0 0 var(--e-4);
+  padding: var(--e-3);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+}
+
+.coleta-form__parametros legend {
+  padding: 0 var(--e-2);
+  font-size: var(--t-pequeno);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Linha de parametro ------------------------------------------------------ */
+
+.linha-parametro {
+  padding: var(--e-2) 0;
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.linha-parametro:last-child {
+  border-bottom: 0;
+}
+
+.linha-parametro__marcar {
+  display: flex;
+  align-items: baseline;
+  gap: var(--e-2);
+  min-height: 32px;
+  cursor: pointer;
+}
+
+.linha-parametro__marcar input {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.linha-parametro__codigo {
+  margin-left: var(--e-2);
+  font-family: var(--fonte-mono);
+  font-size: var(--t-pequeno);
+  color: var(--cor-texto-fraco);
+}
+
+.linha-parametro__medida {
+  display: flex;
+  align-items: center;
+  gap: var(--e-2);
+  margin: var(--e-1) 0 var(--e-1) 26px;
+}
+
+.linha-parametro__medida input {
+  width: 8rem;
+  min-height: 40px;
+  padding: var(--e-2);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-pequeno);
+  font: inherit;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.linha-parametro__medida input:disabled {
+  background: var(--cor-fundo);
+  color: var(--cor-texto-fraco);
+}
+
+.linha-parametro__unidade {
+  font-size: var(--t-pequeno);
+  color: var(--cor-texto-fraco);
+}
+
+.linha-parametro__dica,
+.linha-parametro__previa {
+  margin: 0 0 0 26px;
+  font-size: var(--t-pequeno);
+}
+
+.linha-parametro__dica {
+  color: var(--cor-texto-fraco);
+}
+
+.linha-parametro__previa {
+  font-weight: 600;
+}
+
+.linha-parametro__previa--fora {
+  color: var(--cor-critica);
+}
+
+.linha-parametro__previa--conforme {
+  color: var(--cor-conforme);
+}
+
+.linha-parametro__norma {
+  margin: var(--e-1) 0 0 26px;
+  font-size: var(--t-pequeno);
+  color: var(--cor-texto-fraco);
+}
+
+.linha-parametro__norma summary {
+  cursor: pointer;
+  padding: var(--e-1) 0;
+}
+
+/* Veredito ---------------------------------------------------------------- */
+
+.veredito {
+  padding: var(--e-4);
+  border: 1px solid var(--cor-borda);
+  border-left-width: 5px;
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+}
+
+.veredito--conforme {
+  border-left-color: var(--cor-conforme);
+}
+
+.veredito--reprovada {
+  border-left-color: var(--cor-critica);
+}
+
+.veredito__topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e-3);
+  margin-bottom: var(--e-2);
+}
+
+.veredito__resumo {
+  font-weight: 600;
+}
+
+.veredito__meta {
+  font-size: var(--t-pequeno);
+  color: var(--cor-texto-fraco);
+}
+
+.veredito__mensagem {
+  display: block;
+  margin-top: var(--e-1);
+  font-size: var(--t-pequeno);
+  font-weight: 400;
+  color: var(--cor-critica);
+}
+
+.veredito__ocorrencia {
+  margin-top: var(--e-4);
+  padding: var(--e-3);
+  border-radius: var(--raio);
+  background: var(--cor-critica-fundo);
+}
+
+.veredito__ocorrencia p:last-child {
+  margin-bottom: 0;
+}
+
+.veredito__ocorrencia-dados {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e-2);
+}
+
+/* Periodo ----------------------------------------------------------------- */
+
+.periodo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e-3);
+  margin-bottom: var(--e-3);
+  font-size: var(--t-pequeno);
+}
+
+.periodo label {
+  display: flex;
+  align-items: center;
+  gap: var(--e-2);
+}
+
+.periodo input {
+  min-height: 40px;
+  padding: var(--e-1) var(--e-2);
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: var(--raio-pequeno);
+  font: inherit;
+}
