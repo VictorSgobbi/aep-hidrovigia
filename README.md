@@ -47,19 +47,16 @@ Prova de Conceito — AEP 2026.2 · 6º Semestre · Engenharia de Software
 
 | RA | Nome | GitHub |
 |---|---|---|
-| *a preencher* | Victor Sgobbi | [@VictorSgobbi](https://github.com/VictorSgobbi) |
-| *a preencher* | Bruno | [@BrundoCJ](https://github.com/BrundoCJ) |
-| *a preencher* | Leonardo | [@Leocm123](https://github.com/Leocm123) |
+| 24000732-2 | Victor Sgobbi | [@VictorSgobbi](https://github.com/VictorSgobbi) |
+| 24021297-2 | Bruno | [@BrundoCJ](https://github.com/BrundoCJ) |
+| 24015988-2 | Leonardo | [@Leocm123](https://github.com/Leocm123) |
 
 ### Links da entrega
 
 | | |
 |---|---|
 | **Repositório** | https://github.com/VictorSgobbi/aep-hidrovigia |
-| **Vídeo de demonstração** | *a publicar* |
-
-> O link do vídeo entra na linha acima assim que subir no YouTube — roteiro pronto em
-> [`docs/roteiro-video-entrega1.txt`](docs/roteiro-video-entrega1.txt).
+| **Vídeo de demonstração** | https://www.youtube.com/watch?v=ym-w1ppuR4E |
 
 ---
 
@@ -507,10 +504,9 @@ Como o repositório atende a cada critério da correção.
 | GitHub e versionamento | 0,1 | Repositório público, histórico em Conventional Commits, PRs revisados entre a equipe | ✅ |
 | Testes automatizados | 0,1 | 188 testes de backend em 4 níveis (`./mvnw clean verify`) e 59 de frontend (`npm run verificar`) | ✅ |
 | Cobertura de testes ≥ 70% | 0,1 | JaCoCo trava o build abaixo de 70%; cobertura atual ~99% — relatório em `target/site/jacoco/index.html` | ✅ |
-| Vídeo de demonstração | 0,3 | Roteiro pronto em [docs/roteiro-video-entrega1.txt](docs/roteiro-video-entrega1.txt); link a publicar na seção [Identificação](#identificação) | ⏳ pendente |
+| Vídeo de demonstração | 0,3 | Publicado no YouTube, link na seção [Identificação](#identificação); roteiro em [docs/roteiro-video-entrega1.txt](docs/roteiro-video-entrega1.txt) | ✅ |
 
-O único item em aberto é a gravação e publicação do vídeo — o resto já está no
-repositório e é verificável com os comandos listados neste README.
+Os oito critérios estão cobertos e verificáveis com os comandos listados neste README.
 
 ---
 
