@@ -7,43 +7,39 @@
 Prova de Conceito — AEP 2026.2 · 6º Semestre · Engenharia de Software
 
 [![ODS 6](https://img.shields.io/badge/ODS%206-Água%20Potável%20e%20Saneamento-26BDE2?style=flat-square)](https://brasil.un.org/pt-br/sdgs/6)
-[![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square)](https://adoptium.net/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-6DB33F?style=flat-square)](https://spring.io/projects/spring-boot)
-[![MongoDB](https://img.shields.io/badge/MongoDB-7-47A248?style=flat-square)](https://www.mongodb.com/)
-[![Cobertura](https://img.shields.io/badge/cobertura%20mínima-70%25-blue?style=flat-square)](#-testes-e-cobertura)
+[![Cobertura](https://img.shields.io/badge/cobertura%20mínima-70%25-blue?style=flat-square)](#testes-e-cobertura)
 [![Licença](https://img.shields.io/badge/licença-MIT-lightgrey?style=flat-square)](LICENSE)
 
 </div>
 
 ---
 
-## 📑 Sumário
+## Sumário
 
-1. [Identificação](#-identificação)
-2. [O problema](#-o-problema)
-3. [Objetivo de Desenvolvimento Sustentável](#-objetivo-de-desenvolvimento-sustentável)
-4. [A solução](#-a-solução)
-5. [Tecnologias](#-tecnologias)
-6. [Como executar](#-como-executar)
-7. [Testes e cobertura](#-testes-e-cobertura)
-8. [Estrutura do banco NoSQL](#-estrutura-do-banco-nosql)
-9. [Arquitetura e orientação a objetos](#-arquitetura-e-orientação-a-objetos)
-10. [API](#-api)
-11. [Estrutura do repositório](#-estrutura-do-repositório)
-12. [Equipe e metodologia](#-equipe-e-metodologia)
-13. [Entregas e versionamento](#-entregas-e-versionamento)
-14. [Rastreabilidade dos critérios de avaliação](#-rastreabilidade-dos-critérios-de-avaliação)
-15. [Evolução prevista](#-evolução-prevista)
+1. [Identificação](#identificação)
+2. [O problema](#o-problema)
+3. [ODS 6](#ods-6)
+4. [A solução](#a-solução)
+5. [Tecnologias](#tecnologias)
+6. [Como executar](#como-executar)
+7. [Testes e cobertura](#testes-e-cobertura)
+8. [Banco de dados NoSQL](#banco-de-dados-nosql)
+9. [Arquitetura e orientação a objetos](#arquitetura-e-orientação-a-objetos)
+10. [API](#api)
+11. [Estrutura do repositório](#estrutura-do-repositório)
+12. [Equipe](#equipe)
+13. [Critérios da 1ª entrega](#critérios-da-1ª-entrega)
+14. [Próximos passos](#próximos-passos)
 
 ---
 
-## 🎓 Identificação
+## Identificação
 
 |  |  |
 |---|---|
 | **Curso** | Engenharia de Software |
 | **Série** | 6º Semestre |
-| **Atividade** | AEP — Atividade de Estudo Programada · 2026.2 |
+| **Atividade** | AEP — Atividade de Estudo Programada · 2026.2 · 1ª entrega |
 | **Título da PoC** | HidroVigia — vigilância da qualidade da água em sistemas de abastecimento de pequeno porte |
 | **ODS atendido** | ODS 6 — Água Potável e Saneamento |
 
@@ -60,25 +56,22 @@ Prova de Conceito — AEP 2026.2 · 6º Semestre · Engenharia de Software
 | | |
 |---|---|
 | **Repositório** | https://github.com/VictorSgobbi/aep-hidrovigia |
-| **Vídeo de demonstração (1ª entrega)** | *a preencher — YouTube, 2 a 3 minutos* |
-| **Versão da 1ª entrega** | tag [`v1.0-entrega1`](https://github.com/VictorSgobbi/aep-hidrovigia/releases/tag/v1.0-entrega1) |
+| **Vídeo de demonstração** | *a publicar* |
+
+> O link do vídeo entra na linha acima assim que subir no YouTube — roteiro pronto em
+> [`docs/roteiro-video-entrega1.txt`](docs/roteiro-video-entrega1.txt).
 
 ---
 
-## 🚱 O problema
+## O problema
 
 Municípios pequenos e sistemas comunitários — poços de escolas rurais, associações,
 cisternas, distritos afastados — são obrigados a monitorar a potabilidade da água que
-distribuem. Na prática, esse controle é feito em planilhas e cadernos de campo.
+distribuem. Na prática, isso é feito em planilha e caderno de campo: uma análise fora
+do padrão pode levar dias para virar uma ação concreta, e nesse intervalo a água
+continua sendo distribuída.
 
-O efeito é sempre o mesmo: **uma análise fora do padrão demora dias para virar ação.**
-O laudo chega, é arquivado, e a água continua sendo distribuída enquanto ninguém cruza
-aquele resultado com o limite legal nem cobra uma providência de alguém com nome e prazo.
-
-O intervalo entre *detectar* e *agir* é exatamente onde mora o risco sanitário — e é
-esse intervalo que o HidroVigia fecha.
-
-### Quem usa
+É esse intervalo, entre detectar e agir, que o HidroVigia fecha.
 
 | Público | Para quê |
 |---|---|
@@ -88,7 +81,7 @@ esse intervalo que o HidroVigia fecha.
 
 ---
 
-## 🎯 Objetivo de Desenvolvimento Sustentável
+## ODS 6
 
 <img src="https://img.shields.io/badge/6-ÁGUA%20POTÁVEL%20E%20SANEAMENTO-26BDE2?style=for-the-badge" alt="ODS 6" />
 
@@ -98,73 +91,37 @@ esse intervalo que o HidroVigia fecha.
 |---|---|
 | **6.1** — Acesso universal e equitativo a água potável segura | Torna verificável, ponto a ponto, se a água distribuída atende ao padrão legal |
 | **6.3** — Melhorar a qualidade da água | Reduz o tempo entre detectar um desvio e agir sobre ele, com prazo por gravidade |
-| **6.4** — Aumentar a eficiência no uso da água | Base de indicadores por ponto, ponto de partida para acompanhar perdas (2ª entrega) |
 
-### Por que o alinhamento é objetivo, e não retórico
+As regras de negócio do sistema são a própria norma: os limites aplicados vêm da
+**Portaria GM/MS nº 888/2021**, que define o padrão de potabilidade da água para
+consumo humano no Brasil. Não há critério inventado pela equipe.
 
-**As regras de negócio do sistema são a própria norma.** Os limites aplicados vêm da
-**Portaria GM/MS nº 888/2021**, que alterou o Anexo XX da Portaria de Consolidação nº 5/2017
-e define o padrão de potabilidade da água para consumo humano no Brasil.
+| Código | Parâmetro | Limite aplicado | Risco |
+|---|---|---|---|
+| `ECOLI` | *Escherichia coli* | ausência | 🔴 Microbiológico |
+| `CTOT` | Coliformes totais | ausência | 🔴 Microbiológico |
+| `CRL` | Cloro residual livre | 0,2 – 2,0 mg/L | 🟠 Desinfecção |
+| `PH` | pH | 6,0 – 9,0 | 🟡 Físico-químico |
+| `TURB` | Turbidez | ≤ 5,0 uT | 🟡 Físico-químico |
+| `NITRATO` | Nitrato (como N) | ≤ 10,0 mg/L | 🟡 Físico-químico |
+| `FLUOR` | Fluoreto | ≤ 1,5 mg/L | 🟡 Físico-químico |
+| `COR` | Cor aparente | ≤ 15,0 uH | 🔵 Organoléptico |
 
-Não há critério inventado pela equipe: o que reprova uma amostra aqui é o que reprova
-uma amostra na vigilância sanitária.
-
-| Código | Parâmetro | Limite aplicado | Tipo de limite | Risco |
-|---|---|---|---|---|
-| `ECOLI` | *Escherichia coli* | ausência | Ausência | 🔴 Microbiológico |
-| `CTOT` | Coliformes totais | ausência | Ausência | 🔴 Microbiológico |
-| `CRL` | Cloro residual livre | 0,2 – 2,0 mg/L | Faixa | 🟠 Desinfecção |
-| `PH` | pH | 6,0 – 9,0 | Faixa | 🟡 Físico-químico |
-| `TURB` | Turbidez | ≤ 5,0 uT | Máximo | 🟡 Físico-químico |
-| `NITRATO` | Nitrato (como N) | ≤ 10,0 mg/L | Máximo | 🟡 Físico-químico |
-| `FLUOR` | Fluoreto | ≤ 1,5 mg/L | Máximo | 🟡 Físico-químico |
-| `COR` | Cor aparente | ≤ 15,0 uH | Máximo | 🔵 Organoléptico |
-
-> ⚠️ **Verificar antes da apresentação.** Os valores em
-> [`CatalogoParametros`](src/main/java/br/com/hidrovigia/dominio/parametro/CatalogoParametros.java)
-> seguem o padrão brasileiro, mas **confira cada limite contra o texto oficial da portaria**
-> antes de defender o trabalho. A PoC não substitui a norma. O mesmo critério vale para
-> qualquer estatística que entrar nesta documentação: só entra com fonte e ano.
+> Os valores em [`CatalogoParametros`](src/main/java/br/com/hidrovigia/dominio/parametro/CatalogoParametros.java)
+> seguem o padrão brasileiro, mas vale conferir cada limite contra o texto oficial da
+> portaria antes de defender o trabalho.
 
 ---
 
-## 💡 A solução
+## A solução
 
-### Fluxo principal
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  1. Cadastrar ponto de monitoramento                            │
-│     poço, cisterna, manancial, reservatório…                    │
-└────────────────────────────┬────────────────────────────────────┘
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  2. Técnico registra a coleta com N parâmetros medidos          │
-└────────────────────────────┬────────────────────────────────────┘
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  3. Sistema confronta cada valor com o limite da norma          │
-└────────────────────────────┬────────────────────────────────────┘
-                             ▼
-                    ┌────────┴────────┐
-              conforme            reprovou
-                    │                 │
-                    ▼                 ▼
-        ┌───────────────────┐  ┌──────────────────────────────────┐
-        │ Análise gravada   │  │ 4. Classifica a gravidade        │
-        │ como conforme     │  │ 5. Abre ocorrência com prazo     │
-        └───────────────────┘  └──────────────┬───────────────────┘
-                                              ▼
-                               ┌──────────────────────────────────┐
-                               │ 6. Vigilância registra tratativas│
-                               │    até resolver a pendência      │
-                               └──────────────┬───────────────────┘
-                                              ▼
-                               ┌──────────────────────────────────┐
-                               │ 7. Painel: conformidade,         │
-                               │    pendências e prazos vencidos  │
-                               └──────────────────────────────────┘
-```
+1. Cadastra-se um ponto de monitoramento (poço, cisterna, manancial, reservatório...).
+2. O técnico registra a coleta com os parâmetros medidos.
+3. O sistema confronta cada valor com o limite da norma.
+4. Se está tudo conforme, a análise é só gravada. Se algo reprova, o sistema classifica
+   a gravidade e abre uma ocorrência com prazo automaticamente.
+5. A vigilância registra as tratativas até resolver a pendência.
+6. O painel mostra conformidade, pendências e prazos vencidos em tempo real.
 
 ### Gravidade e prazo de resposta
 
@@ -176,34 +133,34 @@ A política padrão classifica pelo **pior risco encontrado na amostra**:
 | 🟠 **Alta** | **72 h** | Falha de desinfecção ou desvio físico-químico |
 | 🟡 **Média** | **168 h** | Desvio apenas organoléptico |
 
-Dez desvios de cor continuam sendo menos urgentes que uma única detecção de *E. coli* —
-por isso a política olha o **risco**, não a contagem. Uma segunda política
-(`ClassificadorPorQuantidade`) está implementada para demonstrar que essa decisão é um
-ponto de extensão real, e a ocorrência grava **qual política a classificou**.
+Dez desvios de cor continuam sendo menos urgentes que uma única detecção de *E. coli*,
+porque a política olha o risco, não a contagem. Uma segunda política
+(`ClassificadorPorQuantidade`) também está implementada, para mostrar que essa decisão
+é um ponto de extensão real — e a ocorrência grava qual política a classificou.
 
 ---
 
-## 🛠 Tecnologias
+## Tecnologias
 
 | Camada | Tecnologia | Papel |
 |---|---|---|
-| Interface | **React 19 + Vite + TypeScript** | Quatro telas que consomem a API |
+| Interface | React 19 + Vite + TypeScript | Telas que consomem a API |
 | Estado remoto | TanStack Query | Cache e invalidação cruzada entre telas |
-| Linguagem | **Java 21** | Programação orientada a objetos |
-| Framework | **Spring Boot 3.3.5** | Injeção de dependências, REST, configuração |
-| Banco de dados | **MongoDB 7** | **NoSQL orientado a documentos** |
+| Linguagem | Java 21 | Programação orientada a objetos |
+| Framework | Spring Boot 3.3.5 | Injeção de dependências, REST, configuração |
+| Banco de dados | MongoDB 7 | NoSQL orientado a documentos |
 | Persistência | Spring Data MongoDB | Repositórios e mapeamento objeto-documento |
 | Validação | Jakarta Bean Validation | Contratos de entrada da API |
 | Documentação da API | springdoc-openapi | Swagger UI interativo |
 | Testes | JUnit 5 · Mockito · AssertJ | Unidade, aplicação e web |
 | Testes de integração | Testcontainers + MongoDB 7 | Banco real e efêmero |
-| Cobertura | **JaCoCo** | Relatório e trava de 70% no build |
+| Cobertura | JaCoCo | Relatório e trava de 70% no build |
 | Integração contínua | GitHub Actions | Testes e cobertura a cada push |
 | Infraestrutura local | Docker Compose | MongoDB e Mongo Express |
 
 ---
 
-## 🚀 Como executar
+## Como executar
 
 ### Pré-requisitos
 
@@ -211,35 +168,27 @@ ponto de extensão real, e a ocorrência grava **qual política a classificou**.
 |---|---|---|
 | JDK | 21 | [Eclipse Temurin](https://adoptium.net/temurin/releases/?version=21) |
 | Docker | com Compose v2 | [Docker Desktop](https://www.docker.com/products/docker-desktop/) |
-| Node | 24 — **opcional** | [nodejs.org](https://nodejs.org/) |
+| Node | 22+ — opcional | [nodejs.org](https://nodejs.org/) |
 
-**Node só é necessário para mexer no frontend.** Quem trabalha no backend não precisa
-instalar nada além do JDK e do Docker: `./mvnw clean verify` continua sendo um comando
-só de Java. Para empacotar a interface junto, o perfil `-Pfrontend` baixa o Node
-sozinho.
+Node só é necessário para mexer no frontend. Quem trabalha só no backend não precisa
+de nada além do JDK e do Docker — `./mvnw clean verify` continua sendo um comando só
+de Java. Maven também não precisa ser instalado: o repositório traz o Maven Wrapper
+(`mvnw` no Linux/macOS, `mvnw.cmd` no Windows), que baixa a versão certa sozinho.
 
-**Maven não precisa ser instalado.** O repositório traz o
-[Maven Wrapper](https://maven.apache.org/wrapper/) (`mvnw`), que baixa a versão
-correta na primeira execução — todo mundo compila com o mesmo Maven que a CI.
-Use `./mvnw` no Linux e macOS e `mvnw.cmd` no Windows.
-
-No Windows, o único pré-requisito de linguagem sai em um comando:
+No Windows, o JDK sai em um comando:
 
 ```bash
 winget install EclipseAdoptium.Temurin.21.JDK
 ```
 
-### 1️⃣ Clone o repositório
+### 1. Clone o repositório
 
 ```bash
 git clone https://github.com/VictorSgobbi/aep-hidrovigia.git
-```
-
-```bash
 cd aep-hidrovigia
 ```
 
-### 2️⃣ Suba o MongoDB
+### 2. Suba o MongoDB
 
 ```bash
 docker compose up -d
@@ -248,35 +197,34 @@ docker compose up -d
 Banco em `localhost:27017`, base `hidrovigia`, com volume nomeado — os dados sobrevivem
 ao `docker compose down`.
 
-### 3️⃣ Rode a aplicação
+### 3. Rode a aplicação
 
 ```bash
 ./mvnw -Pfrontend spring-boot:run
 ```
 
-Um comando serve **a interface, a API e o Swagger** na porta 8080. O perfil compila o
-frontend antes de subir; sem ele (`./mvnw spring-boot:run`) sobe apenas a API, que é o
-suficiente para trabalhar no backend.
+Um comando serve a interface, a API e o Swagger na porta 8080. Sem o perfil
+(`./mvnw spring-boot:run`) sobe só a API, o que já é suficiente para trabalhar no
+backend.
 
-Na primeira subida a base é populada com **3 pontos e 5 análises de demonstração**,
-cobrindo os quatro desfechos possíveis (conforme, média, alta e crítica). Para desligar
-a carga:
+Na primeira subida a base é populada com 3 pontos e 5 análises de demonstração,
+cobrindo os quatro desfechos possíveis (conforme, média, alta e crítica). Para
+desligar a carga:
 
 ```bash
 HIDROVIGIA_CARGA_DEMONSTRACAO=false ./mvnw spring-boot:run
 ```
 
-### 4️⃣ Abra a interface
+### 4. Abra a interface
 
-### 👉 **http://localhost:8080/**
+**http://localhost:8080/**
 
-Quatro telas: **Painel** de conformidade, **Pontos** de monitoramento, **Coletas** e a
-fila de **Ocorrências**. É por elas que a PoC é demonstrada.
+Quatro telas: Painel de conformidade, Pontos de monitoramento, Coletas e a fila de
+Ocorrências.
 
-A documentação interativa da API continua disponível em
-**http://localhost:8080/swagger-ui.html**, e é por onde se inspeciona o contrato.
+A documentação interativa da API fica em **http://localhost:8080/swagger-ui.html**.
 
-### 5️⃣ Para desenvolver o frontend
+### 5. Para desenvolver o frontend
 
 ```bash
 ./mvnw spring-boot:run          # terminal 1: API em :8080
@@ -284,16 +232,15 @@ cd frontend && npm install && npm run dev   # terminal 2: interface em :5173
 ```
 
 O dev server do Vite encaminha `/api` para a porta 8080, então o navegador vê tudo na
-mesma origem — igual à produção, e sem CORS para configurar.
+mesma origem, sem CORS para configurar.
 
-### 6️⃣ (Opcional) Inspecione as coleções
+### 6. (Opcional) Inspecione as coleções
 
 ```bash
 docker compose --profile ferramentas up -d
 ```
 
-Mongo Express em **http://localhost:8081** — útil para mostrar os documentos aninhados
-durante a gravação do vídeo.
+Mongo Express em **http://localhost:8081**.
 
 ### Parar tudo
 
@@ -303,7 +250,7 @@ docker compose --profile ferramentas down
 
 ---
 
-## 🧪 Testes e cobertura
+## Testes e cobertura
 
 ### Comando único e reproduzível
 
@@ -311,9 +258,8 @@ docker compose --profile ferramentas down
 ./mvnw clean verify
 ```
 
-Este comando **compila, roda a suíte inteira, gera o relatório de cobertura e reprova o
-build se a cobertura de linhas ficar abaixo de 70%**. É a evidência reproduzível que o
-edital exige.
+Compila, roda a suíte inteira, gera o relatório de cobertura e reprova o build se a
+cobertura de linhas ficar abaixo de 70%.
 
 O relatório fica em `target/site/jacoco/index.html`:
 
@@ -321,150 +267,69 @@ O relatório fica em `target/site/jacoco/index.html`:
 start target/site/jacoco/index.html
 ```
 
-Para gerar o relatório sem a trava de cobertura:
+Para gerar o relatório sem a trava de cobertura, `./mvnw clean test`.
 
-```bash
-./mvnw clean test
-```
-
-### Como a trava está configurada
-
-```xml
-<rule>
-  <element>BUNDLE</element>
-  <limits>
-    <limit>
-      <counter>LINE</counter>
-      <value>COVEREDRATIO</value>
-      <minimum>0.70</minimum>
-    </limit>
-  </limits>
-</rule>
-```
-
-Ficam fora da medição apenas a classe de bootstrap (`HidroVigiaApplication`) e o pacote
-`config`, que contêm declaração de beans e carga de demonstração — nenhuma regra de negócio.
+Ficam fora da medição apenas a classe de bootstrap (`HidroVigiaApplication`) e o
+pacote `config`, que contêm declaração de beans e carga de demonstração — nenhuma
+regra de negócio.
 
 ### O que é testado
 
-São **188 testes de backend** em 13 classes e **59 de frontend** em 10 arquivos. Os
-dois números medem coisas diferentes e **não se somam**.
+**188 testes de backend** em 18 classes e **59 de frontend** em 10 arquivos. Os dois
+números medem coisas diferentes e não se somam.
 
-### Backend — 188 testes em quatro níveis
-
-| Nível | Ferramenta | Classes | O que cobre |
-|---|---|:---:|---|
-| **Domínio** | JUnit 5 + AssertJ | 5 | Limites da norma (conforme, no limite e violado por parâmetro), invariantes dos agregados, ciclo de vida da ocorrência |
-| **Aplicação** | Mockito | 4 | Orquestração dos serviços com repositórios simulados |
-| **Web** | MockMvc | 4 | Contratos HTTP (201/400/404/409/422), header `Location` e formato do JSON |
-| **Integração** | Testcontainers + MongoDB 7 | 1 | Round-trip dos subdocumentos, consultas por campo aninhado e os índices únicos |
+| Nível | Ferramenta | O que cobre |
+|---|---|---|
+| Domínio | JUnit 5 + AssertJ | Limites da norma (conforme, no limite e violado por parâmetro), invariantes dos agregados, ciclo de vida da ocorrência |
+| Aplicação | Mockito | Orquestração dos serviços com repositórios simulados |
+| Web | MockMvc | Contratos HTTP (201/400/404/409/422), header `Location` e formato do JSON |
+| Integração | Testcontainers + MongoDB 7 | Round-trip dos subdocumentos, consultas por campo aninhado e os índices únicos |
 
 Nenhuma data de teste vem de `Instant.now()`: todas derivam de `Fixtures.REFERENCIA`,
-um instante fixo, e quem precisa de "agora" recebe um `Clock` parado. Fixture ancorada
-no relógio da máquina é a origem clássica de teste que falha uma vez a cada dez.
-
-### Testes de integração: rodam mesmo
+um instante fixo, e quem precisa de "agora" recebe um `Clock` parado — evita o clássico
+teste que falha uma vez a cada dez por depender do relógio da máquina.
 
 Os testes de integração se desabilitam sozinhos em máquina sem Docker
-(`@Testcontainers(disabledWithoutDocker = true)`). Isso é conveniente localmente, mas
-**perigoso em CI**: um problema de infraestrutura pularia a única classe que encosta no
-MongoDB e o build passaria verde sem ter testado o banco. Por isso o workflow tem um
-passo que lê o relatório do Surefire e **reprova o build se essa classe tiver sido
-pulada**.
+(`@Testcontainers(disabledWithoutDocker = true)`), o que é conveniente localmente mas
+arriscado em CI — por isso o workflow lê o relatório do Surefire e reprova o build se
+essa classe tiver sido pulada.
 
-Duas armadilhas de ambiente já estão resolvidas no `pom.xml`:
-
-| Sintoma | Causa | Correção aplicada |
-|---|---|---|
-| `Could not find a valid Docker environment` com Docker rodando | O docker-java negocia API < 1.40, e o Docker Engine 29 recusa com HTTP 400 | `api.version=1.41` no Surefire — aceita por engines do Docker 20.10 ao 29 |
-| Testcontainers antigo demais | Boot 3.3.5 gerencia a versão 1.19.8 | `testcontainers.version` sobreposta para 1.21.3 |
-
-Se ainda assim os testes forem pulados, rode `docker info` e confira se o daemon
-responde para o seu usuário.
-
-### Frontend — 59 testes na lógica, e não no layout
+Frontend:
 
 ```bash
 cd frontend && npm run verificar    # tipos + lint + testes com cobertura
 ```
 
-O esforço de teste do frontend é concentrado onde **a falha é silenciosa**: a
-normalização das duas formas de erro da API, a distribuição das mensagens de validação
-pelos campos, as conversões de data e decimal e a prévia de conformidade. Um teste-ponte
-exercita a cadeia inteira de uma requisição reprovada, do `fetch` até a mensagem
-aparecer ligada ao input certo.
+O esforço de teste do frontend está concentrado onde a falha é silenciosa: normalização
+dos dois formatos de erro da API, distribuição das mensagens de validação pelos campos,
+conversões de data e decimal, e a prévia de conformidade. Layout não é testado por
+unidade, de propósito — isso apareceria na primeira vez que alguém abrisse a tela.
 
-Layout **não** é testado por unidade, de propósito: um `<div>` fora de lugar aparece na
-primeira vez que alguém abre a tela. Snapshot de JSX ensinaria a equipe a rodar `-u` por
-reflexo.
-
-### End-to-end — o fluxo do vídeo, num navegador de verdade
-
-```bash
-docker compose up -d
-./mvnw -Pfrontend clean package -DskipTests
-cd frontend && npm run e2e
-```
-
-Dois cenários no Playwright, contra o **jar empacotado** — a única verificação do
-projeto em que a interface e a API estão na mesma origem, servidas pelo mesmo processo,
-que é exatamente como a demonstração é gravada. Os testes do Vitest usam mocks de HTTP
-e nunca falam com o backend; os de backend não sabem que existe interface.
-
-O cenário principal é o roteiro do vídeo: registrar uma coleta contaminada em PMA-003,
-ver a ocorrência crítica que o sistema abre sozinho, registrar duas tratativas, encerrar
-e conferir que o painel mudou. O segundo dá um F5 em `/ocorrencias` e confirma que a
-aplicação carrega, em vez do 404 que existiria sem o encaminhamento de rotas.
-
-As asserções são **relativas**: o cenário lê a contagem de pendências antes de começar e
-verifica que ela sobe e volta. Fixar "3 pendências" faria o teste passar uma vez e
-falhar na segunda, porque ele grava no banco — e um teste que só roda numa base virgem
-não é rodado durante os ensaios, que é justamente quando ele tem mais valor.
-
-### As duas medições de cobertura
+### Cobertura atual
 
 | Medição | Ferramenta | Escopo | Mínimo travado | Atual |
 |---|---|---|:---:|:---:|
-| Backend | JaCoCo (`BUNDLE`, `LINE`) | `src/main/java`, menos bootstrap e `config/` | **70%** | ~99% |
-| Lógica do frontend | Vitest (v8) | `frontend/src/api` e `frontend/src/dominio` | **90%** | 100% |
-
-Os dois números medem coisas diferentes e não se somam. O JaCoCo instrumenta classes
-Java e não tem opinião sobre TypeScript. A camada de apresentação do frontend não é
-medida de propósito: ela é verificada abrindo a tela.
+| Backend | JaCoCo (linhas) | `src/main/java`, menos bootstrap e `config/` | 70% | ~99% |
+| Lógica do frontend | Vitest (v8) | `frontend/src/api` e `frontend/src/dominio` | 90% | 100% |
 
 ### Integração contínua
 
-O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) tem três jobs:
-
-| Job | O que faz |
-|---|---|
-| **Testes e cobertura** | `./mvnw clean verify` e a confirmação de que os testes de integração executaram |
-| **Frontend (lint, tipos e testes)** | `npm ci`, checagem de tipos, lint e testes com cobertura |
-| **Interface no jar (empacotamento e e2e)** | `-Pfrontend package`, a conferência de que a SPA entrou no jar e os cenários do Playwright contra ele, com MongoDB de serviço |
-
-Os três repetem a mesma lição: cada um tem um passo que reprova o build se a suíte tiver
-sido **pulada**, porque suíte que não roda é pior que suíte que falha. Nos cenários
-end-to-end isso importa em dobro — eles dependem de banco e de navegador, e são o tipo
-de teste que se auto-desabilita sem avisar.
-
-> ⚠️ A proteção da branch `main` hoje exige apenas o check **Testes e cobertura**.
-> Enquanto os dois nomes novos não entrarem na regra, os jobs de frontend e de
-> empacotamento são informativos.
+O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda a suíte de
+backend e reprova o build se a cobertura ficar abaixo de 70% ou se o teste de
+integração tiver sido pulado.
 
 ---
 
-## 🗄 Estrutura do banco NoSQL
+## Banco de dados NoSQL
 
-**Três coleções**, com **relacionamento por identificador** e **subdocumentos aninhados
-em todas elas**.
+Três coleções, com relacionamento por identificador e subdocumentos aninhados em
+todas elas.
 
 | Coleção | Subdocumentos aninhados | Referencia | Índices |
 |---|---|---|---|
 | `pontos_monitoramento` | `localizacao`, `responsavel` | — | `codigo` (único) |
 | `analises` | `parametros[]`, `resultado` | `pontoId` | `pontoId`, `coletadoEm` |
-| `ocorrencias` | `parametrosViolados[]`, `tratativas[]` | `analiseId`, `pontoId` | `analiseId` (**único**), `pontoId` |
-
-### Relacionamentos
+| `ocorrencias` | `parametrosViolados[]`, `tratativas[]` | `analiseId`, `pontoId` | `analiseId` (único), `pontoId` |
 
 ```
 pontos_monitoramento (1) ──────< (N) analises
@@ -473,112 +338,26 @@ pontos_monitoramento (1) ──────< (N) analises
           └──────────< (N) ocorrencias ┘
 ```
 
-Uma análise reprovada gera **exatamente uma** ocorrência. Uma análise conforme não gera
-nenhuma.
+Uma análise reprovada gera exatamente uma ocorrência; uma análise conforme não gera
+nenhuma. `analiseId` tem índice único, e o serviço checa antes e devolve `409` — o
+índice é o que segura o caso de duas requisições concorrentes.
 
-Essa cardinalidade não é só uma intenção documentada: `analiseId` tem **índice único**.
-O serviço checa antes e devolve `409`, e o índice é o que segura o caso de duas
-requisições concorrentes — sem ele, a consulta `findByAnaliseId`, que devolve
-`Optional`, quebraria ao encontrar duas ocorrências para a mesma análise.
+### Duas decisões de modelagem
 
-### Exemplo de documento — `analises`
+**O limite aplicado fica gravado dentro de cada parâmetro.** Poderia ser lido do
+catálogo na hora de exibir, mas a norma muda: uma análise de 2026 precisa continuar
+mostrando o limite que valia em 2026.
 
-```json
-{
-  "_id": ObjectId("66f1a2b3c4d5e6f7a8b9c0d1"),
-  "pontoId": "66f1a2b3c4d5e6f7a8b9c0aa",
-  "pontoCodigo": "PMA-001",
-  "coletadoEm": ISODate("2026-09-01T10:00:00Z"),
-  "coletor": "Tecnico Bruno",
-  "parametros": [
-    {
-      "codigo": "ECOLI",
-      "nome": "Escherichia coli",
-      "valor": "14",
-      "unidade": "UFC/100mL",
-      "limiteMinimo": null,
-      "limiteMaximo": "0",
-      "conforme": false,
-      "mensagem": "Escherichia coli detectado na amostra: 14 UFC/100mL (exigida ausencia)",
-      "risco": "MICROBIOLOGICO",
-      "referenciaLegal": "Portaria GM/MS n. 888/2021"
-    },
-    {
-      "codigo": "CRL",
-      "nome": "Cloro residual livre",
-      "valor": "0.05",
-      "unidade": "mg/L",
-      "limiteMinimo": "0.2",
-      "limiteMaximo": "2.0",
-      "conforme": false,
-      "mensagem": "Cloro residual livre abaixo do minimo: 0.05 mg/L (esperado entre 0.2 e 2.0 mg/L)",
-      "risco": "DESINFECCAO",
-      "referenciaLegal": "Portaria GM/MS n. 888/2021"
-    }
-  ],
-  "resultado": {
-    "conforme": false,
-    "qtdParametros": 5,
-    "qtdNaoConformidades": 2
-  },
-  "registradoEm": ISODate("2026-09-01T11:30:00Z")
-}
-```
+**`pontoCodigo` é repetido em `analises` e `ocorrencias`.** Desnormalização
+deliberada — a fila de pendências mostra o código do ponto em cada linha, e repetir 7
+caracteres evita uma consulta extra por linha. O código do ponto é imutável, então não
+há risco de divergência.
 
-### Exemplo de documento — `ocorrencias`
-
-```json
-{
-  "_id": ObjectId("66f1a2b3c4d5e6f7a8b9c0e2"),
-  "analiseId": "66f1a2b3c4d5e6f7a8b9c0d1",
-  "pontoId": "66f1a2b3c4d5e6f7a8b9c0aa",
-  "pontoCodigo": "PMA-001",
-  "gravidade": "CRITICA",
-  "politicaClassificacao": "risco-sanitario",
-  "status": "EM_TRATATIVA",
-  "abertaEm": ISODate("2026-09-01T11:30:00Z"),
-  "prazoLimite": ISODate("2026-09-02T11:30:00Z"),
-  "parametrosViolados": [
-    {
-      "codigo": "ECOLI",
-      "nome": "Escherichia coli",
-      "valorMedido": "14",
-      "unidade": "UFC/100mL",
-      "limiteAplicado": "ausencia (UFC/100mL)",
-      "risco": "MICROBIOLOGICO",
-      "mensagem": "Escherichia coli detectado na amostra: 14 UFC/100mL (exigida ausencia)"
-    }
-  ],
-  "tratativas": [
-    {
-      "acao": "Ponto isolado da rede de distribuicao",
-      "por": "Leonardo",
-      "em": ISODate("2026-09-01T13:10:00Z"),
-      "statusResultante": "EM_TRATATIVA"
-    }
-  ]
-}
-```
-
-### Duas decisões de modelagem que valem explicação
-
-**1. O limite aplicado fica gravado dentro de cada parâmetro.**
-Poderia ser lido do catálogo na hora de exibir, mas norma muda. Uma análise de 2026
-precisa continuar mostrando o limite que valia em 2026, não o que passou a valer depois.
-Sem isso, o histórico de vigilância deixa de ser auditável.
-
-**2. `pontoCodigo` é repetido em `analises` e `ocorrencias`.**
-Desnormalização deliberada. A fila de pendências mostra o código do ponto em cada linha,
-e repetir 7 caracteres evita uma consulta extra por linha. O código do ponto é imutável,
-então não há risco de divergência.
-
-📄 Detalhamento completo em **[docs/modelagem-nosql.md](docs/modelagem-nosql.md)**.
+Detalhamento completo em [docs/modelagem-nosql.md](docs/modelagem-nosql.md).
 
 ---
 
-## 🏗 Arquitetura e orientação a objetos
-
-### Camadas
+## Arquitetura e orientação a objetos
 
 ```
 api/          Controllers REST, DTOs e tradução de erros para HTTP
@@ -590,68 +369,29 @@ dominio/      Entidades, objetos de valor e regras de negócio
 config/       Beans de infraestrutura e carga de demonstração
 ```
 
-A dependência aponta sempre para dentro. **O pacote `dominio` não depende do Spring** —
-só usa `@Document`/`@Id` nas três raízes de agregado, que é mapeamento de persistência,
+A dependência aponta sempre para dentro. O pacote `dominio` não depende do Spring — só
+usa `@Document`/`@Id` nas três raízes de agregado, que é mapeamento de persistência,
 não acoplamento de framework. Por isso as regras de potabilidade rodam em teste de
 unidade puro, sem subir contexto.
 
-### Padrões aplicados, e o que cada um resolve
-
 | Padrão | Onde | Problema que resolve |
 |---|---|---|
-| **Template Method** | `ParametroPotabilidade.avaliar()` (`final`) | Fixa o formato do veredito; subclasse decide só o limite |
-| **Polimorfismo** | `ParametroFaixa` · `ParametroMaximo` · `ParametroAusencia` | Elimina o `switch` por código de parâmetro |
-| **Strategy** | `ClassificadorGravidade` (2 implementações) | Trocar a política de urgência sem tocar no serviço |
-| **State** | `StatusOcorrencia` | Transições válidas declaradas no enum; impede reabrir resolvida |
-| **Objeto de Valor** | `ResultadoParametro`, `Localizacao`, `Tratativa`… | Não existe instância inválida em memória |
-| **Agregado fechado** | `Analise` (sem setter) | Histórico imutável — corrigir é registrar outra análise |
-| **Injeção de `Clock`** | `PainelConformidadeService` | Torna o cálculo de prazo vencido testável |
+| Template Method | `ParametroPotabilidade.avaliar()` (`final`) | Fixa o formato do veredito; subclasse decide só o limite |
+| Polimorfismo | `ParametroFaixa` · `ParametroMaximo` · `ParametroAusencia` | Elimina o `switch` por código de parâmetro |
+| Strategy | `ClassificadorGravidade` (2 implementações) | Trocar a política de urgência sem tocar no serviço |
+| State | `StatusOcorrencia` | Transições válidas declaradas no enum; impede reabrir resolvida |
+| Objeto de Valor | `ResultadoParametro`, `Localizacao`, `Tratativa`... | Não existe instância inválida em memória |
+| Agregado fechado | `Analise` (sem setter) | Histórico imutável — corrigir é registrar outra análise |
+| Injeção de `Clock` | `PainelConformidadeService` | Torna o cálculo de prazo vencido testável |
 
-### A hierarquia que sustenta o domínio
-
-```
-                ParametroPotabilidade  «abstract»
-                  + avaliar(valor) : ResultadoParametro   «final»
-                  # dentroDoLimite(valor) : boolean       «abstract»
-                  # descreverViolacao(valor) : String     «abstract»
-                             ▲
-        ┌────────────────────┼────────────────────┐
-        │                    │                    │
- ParametroFaixa       ParametroMaximo      ParametroAusencia
- pH 6,0–9,0           turbidez ≤ 5,0 uT    E. coli: contagem 0
- cloro 0,2–2,0 mg/L   nitrato ≤ 10 mg/L    coliformes: contagem 0
-```
-
-Adicionar um parâmetro novo da norma é **adicionar uma linha no catálogo** — nenhuma
+Adicionar um parâmetro novo da norma é adicionar uma linha no catálogo — nenhuma
 classe existente muda.
 
-### Ciclo de vida da ocorrência
-
-```
-                        ┌──── nova tratativa ────┐
-                        │                        │
-                        ▼                        │
-   ABERTA ─────────► EM_TRATATIVA ───────────────┘
-      │                    │
-      │                    ▼
-      └──────────────► RESOLVIDA
-```
-
-`EM_TRATATIVA` volta para si mesmo porque a vigilância registra **quantas ações forem
-necessárias** antes de encerrar a pendência, e cada ação grava uma tratativa no
-histórico. `ABERTA` não tem esse laço: a primeira ação registrada é justamente o que
-tira a ocorrência da fila de não-iniciadas.
-
-`RESOLVIDA` não tem saída. Não existe caminho no código para resolver duas vezes nem
-para reabrir.
-
-📄 Detalhamento completo em **[docs/arquitetura.md](docs/arquitetura.md)**.
+Detalhamento completo em [docs/arquitetura.md](docs/arquitetura.md).
 
 ---
 
-## 🔌 API
-
-### Endpoints
+## API
 
 | Método | Rota | O que faz |
 |:---:|---|---|
@@ -662,7 +402,7 @@ para reabrir.
 | `PUT` | `/api/pontos/{id}` | Atualiza dados cadastrais |
 | `DELETE` | `/api/pontos/{id}` | Desativa sem apagar o histórico |
 | `POST` | `/api/pontos/{id}/reativacao` | Reativa um ponto desativado |
-| 🔷 `POST` | **`/api/analises`** | **Registra a coleta e abre ocorrência se reprovar** |
+| `POST` | `/api/analises` | Registra a coleta e abre ocorrência se reprovar |
 | `GET` | `/api/analises/{id}` | Busca análise pelo identificador |
 | `GET` | `/api/analises/ponto/{codigo}` | Histórico de um ponto |
 | `GET` | `/api/analises?inicio=&fim=` | Análises de um período |
@@ -674,17 +414,11 @@ para reabrir.
 | `GET` | `/api/painel/conformidade/{codigo}` | Indicadores de um ponto |
 | `GET` | `/api/painel/parametros` | Catálogo da norma aplicado pela PoC |
 
-### Códigos de resposta
+Códigos de resposta: `201` criado, `400` requisição inválida, `404` não encontrado,
+`409` regra de negócio violada (ponto desativado, código duplicado, ocorrência já
+resolvida), `422` parâmetro fora do catálogo da norma.
 
-| Código | Significado | Exemplo |
-|:---:|---|---|
-| `201` | Criado | Ponto ou análise registrada |
-| `400` | Requisição inválida | Campo obrigatório ausente |
-| `404` | Não encontrado | Código de ponto inexistente |
-| `409` | Regra de negócio violada | Ponto desativado, código duplicado, ocorrência já resolvida |
-| `422` | Não processável | Parâmetro fora do catálogo da norma |
-
-### Exemplo — registrar uma coleta contaminada
+Exemplo — registrar uma coleta contaminada:
 
 ```bash
 curl -X POST http://localhost:8080/api/analises \
@@ -702,23 +436,20 @@ curl -X POST http://localhost:8080/api/analises \
   }'
 ```
 
-Retorna `201` com o veredito de **cada** parâmetro e abre uma ocorrência **crítica** com
-prazo de 24 horas, imediatamente visível em:
-
-```bash
-curl http://localhost:8080/api/ocorrencias
-```
+Retorna `201` com o veredito de cada parâmetro e abre uma ocorrência crítica com prazo
+de 24 horas, imediatamente visível em `GET /api/ocorrencias`.
 
 ---
 
-## 📁 Estrutura do repositório
+## Estrutura do repositório
 
 ```
 aep-hidrovigia/
 ├── .github/workflows/ci.yml          Testes e cobertura a cada push
 ├── docs/
 │   ├── arquitetura.md                Camadas, padrões e estratégia de testes
-│   └── modelagem-nosql.md            As três coleções, com justificativas
+│   ├── modelagem-nosql.md            As três coleções, com justificativas
+│   └── roteiro-video-entrega1.txt    Roteiro do vídeo de demonstração
 ├── src/
 │   ├── main/
 │   │   ├── java/br/com/hidrovigia/
@@ -733,7 +464,7 @@ aep-hidrovigia/
 │   │   │   ├── repositorio/          3 repositórios MongoDB
 │   │   │   └── servico/              4 serviços de aplicação
 │   │   └── resources/application.yml
-│   └── test/java/br/com/hidrovigia/  12 classes de teste + Fixtures
+│   └── test/java/br/com/hidrovigia/  18 classes de teste + Fixtures
 ├── frontend/                         Interface React + Vite + TypeScript
 │   └── src/
 │       ├── api/                      Cliente tipado e normalizacao de erro
@@ -750,122 +481,53 @@ aep-hidrovigia/
 
 ---
 
-## 👥 Equipe e metodologia
+## Equipe
 
-| Integrante | GitHub | Trilha | Responsável por |
-|---|---|---|---|
-| **Victor Sgobbi** | [@VictorSgobbi](https://github.com/VictorSgobbi) | Domínio e regras | Entidades, objetos de valor, Strategies, testes de unidade do núcleo |
-| **Bruno** | [@BrundoCJ](https://github.com/BrundoCJ) | Persistência e NoSQL | Modelagem das coleções, repositórios, seed, testes de integração |
-| **Leonardo** | [@Leocm123](https://github.com/Leocm123) | API, qualidade e docs | Controllers, DTOs, Swagger, JaCoCo, CI, README, roteiro do vídeo |
-
-Todos revisam os pull requests dos outros.
-
-### Convenção de commits
-
-O projeto segue [Conventional Commits](https://www.conventionalcommits.org/pt-br/):
-
-```
-<tipo>(<escopo>): <descrição no imperativo>
-```
-
-| Tipo | Uso | Escopos |
+| Integrante | GitHub | Responsável por |
 |---|---|---|
-| `feat` | Nova funcionalidade | `dominio` |
-| `fix` | Correção de defeito | `persistencia` |
-| `test` | Testes | `aplicacao` |
-| `docs` | Documentação | `api` |
-| `refactor` | Reestruturação sem mudar comportamento | `infra` |
-| `build` | Dependências e empacotamento | `seed` |
-| `ci` | Integração contínua | `readme` |
-| `chore` | Manutenção | `build` · `repo` |
+| Victor Sgobbi | [@VictorSgobbi](https://github.com/VictorSgobbi) | Entidades, objetos de valor, Strategies, testes de unidade do núcleo |
+| Bruno | [@BrundoCJ](https://github.com/BrundoCJ) | Modelagem das coleções, repositórios, seed, testes de integração |
+| Leonardo | [@Leocm123](https://github.com/Leocm123) | Controllers, DTOs, Swagger, JaCoCo, CI, README, roteiro do vídeo |
 
-Exemplos reais do histórico:
-
-```
-feat(dominio): modela parametros de potabilidade com hierarquia polimorfica
-test(dominio): cobre avaliacao de parametros de faixa, maximo e ausencia
-feat(persistencia): adiciona repositorios das tres colecoes MongoDB
-ci(github-actions): executa testes e publica relatorio de cobertura
-```
-
-📄 Regras completas em **[CONTRIBUTING.md](CONTRIBUTING.md)**.
+Todos revisam os pull requests uns dos outros. Convenção de commits e fluxo de
+trabalho completos em [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-## 🏷 Entregas e versionamento
+## Critérios da 1ª entrega
 
-| Marco | Tag | Conteúdo |
-|---|---|---|
-| **1ª entrega** | `v1.0-entrega1` | Fluxo principal funcional, três coleções com aninhamento, testes com cobertura ≥ 70%, vídeo de 2 a 3 min |
-| **2ª entrega** | *a definir* | Evolução da solução, documentação técnica completa, quadro de tarefas, vídeo de 3 a 5 min |
+Como o repositório atende a cada critério da correção.
 
-A versão de cada entrega é identificável pela **tag** correspondente:
+| Critério | Pts | Evidência | Situação |
+|---|:---:|---|:---:|
+| Problema e alinhamento ao ODS | 0,1 | [O problema](#o-problema) e [ODS 6](#ods-6) — público-alvo identificado e limites vindos da Portaria GM/MS 888/2021 | ✅ |
+| Primeira versão funcional da PoC | 0,1 | Fluxo principal executável pela interface em `localhost:8080`, com carga de demonstração automática; contrato inspecionável no Swagger UI | ✅ |
+| Banco de dados NoSQL | 0,1 | [Banco de dados NoSQL](#banco-de-dados-nosql) — 3 coleções, relacionamento por identificador e subdocumentos aninhados em todas | ✅ |
+| Programação orientada a objetos e organização do código | 0,1 | [Arquitetura](#arquitetura-e-orientação-a-objetos) — camadas, hierarquia polimórfica, Strategy, State, objetos de valor | ✅ |
+| GitHub e versionamento | 0,1 | Repositório público, histórico em Conventional Commits, PRs revisados entre a equipe | ✅ |
+| Testes automatizados | 0,1 | 188 testes de backend em 4 níveis (`./mvnw clean verify`) e 59 de frontend (`npm run verificar`) | ✅ |
+| Cobertura de testes ≥ 70% | 0,1 | JaCoCo trava o build abaixo de 70%; cobertura atual ~99% — relatório em `target/site/jacoco/index.html` | ✅ |
+| Vídeo de demonstração | 0,3 | Roteiro pronto em [docs/roteiro-video-entrega1.txt](docs/roteiro-video-entrega1.txt); link a publicar na seção [Identificação](#identificação) | ⏳ pendente |
 
-```bash
-git checkout v1.0-entrega1
-```
-
----
-
-## ✅ Rastreabilidade dos critérios de avaliação
-
-Onde encontrar a evidência de cada critério da 1ª entrega.
-
-| Critério | Pts | Evidência neste repositório |
-|---|:---:|---|
-| Problema e alinhamento ao ODS | 0,1 | [O problema](#-o-problema) e [ODS](#-objetivo-de-desenvolvimento-sustentável) — limites vindos da Portaria GM/MS 888/2021, com público-alvo identificado |
-| Primeira versão funcional da PoC | 0,1 | Fluxo principal executável pela interface em `localhost:8080`, com carga de demonstração automática; contrato inspecionável no Swagger UI |
-| Banco de dados NoSQL | 0,1 | [Estrutura do banco](#-estrutura-do-banco-nosql) — 3 coleções, relacionamento e subdocumentos aninhados em todas |
-| POO e organização do código | 0,1 | [Arquitetura](#-arquitetura-e-orientação-a-objetos) — Template Method, polimorfismo, Strategy, State, objetos de valor |
-| GitHub e versionamento | 0,1 | Histórico em Conventional Commits, tag `v1.0-entrega1`, CI verde |
-| Testes automatizados | 0,1 | 188 testes de backend em 4 níveis (`./mvnw clean verify`) e 59 de frontend (`npm run verificar`) |
-| **Cobertura ≥ 70%** | 0,1 | JaCoCo travando o build; relatório em `target/site/jacoco/index.html` |
-| Vídeo de demonstração | 0,3 | Link em [Identificação](#-identificação) |
-
-### Requisitos técnicos obrigatórios
-
-| Requisito | Situação |
-|---|:---:|
-| Utilização efetiva de banco NoSQL | ✅ MongoDB 7, três coleções |
-| Linguagem OO com aplicação efetiva do paradigma | ✅ Java 21, hierarquia polimórfica e padrões |
-| Código versionado em repositório GitHub acessível | ✅ Público |
-| Testes automatizados executáveis | ✅ `./mvnw clean verify` (Maven Wrapper incluso) |
-| Cobertura mínima de 70% com evidência reproduzível | ✅ JaCoCo com trava no build |
-| Documentação técnica suficiente | ✅ README + `docs/` |
-| PoC executável | ✅ Docker Compose + Spring Boot |
-
-### Nível de complexidade do banco
-
-O edital descreve dois níveis. Esta PoC já entrega o **mais alto**, que satisfaz o outro:
-
-| Requisito | Nível 1 | Nível 2 | HidroVigia |
-|---|:---:|:---:|:---:|
-| Coleção única, objetos homogêneos, CRUD | ✅ | — | ✅ |
-| Múltiplas coleções | — | ✅ | ✅ 3 coleções |
-| Relacionamento entre coleções | — | ✅ | ✅ por identificador |
-| Coleção com documentos aninhados ou listas de subdocumentos | — | ✅ | ✅ nas três |
+O único item em aberto é a gravação e publicação do vídeo — o resto já está no
+repositório e é verificável com os comandos listados neste README.
 
 ---
 
-## 🔭 Evolução prevista
+## Próximos passos
 
-**Entregue na 2ª entrega:** interface própria com as quatro telas, cobrindo os 18
-endpoints — a evolução mais visível da solução, e o que permite mostrar prazo, fila de
-pendências e gravidade em vez de descrevê-los.
+Itens de backend que ficam para depois desta entrega, sem compromisso de prazo ainda:
 
-Ainda no escopo, todos de backend:
-
-- **Série histórica por parâmetro**, com agregações do MongoDB (`$group`, `$bucket`)
-- **Alerta de análise vencida**, comparando a última coleta com a frequência mínima
+- Série histórica por parâmetro, com agregações do MongoDB (`$group`, `$bucket`)
+- Alerta de análise vencida, comparando a última coleta com a frequência mínima
   exigida por tipo de fonte
-- **Índice de perdas** por macromedição versus micromedição (meta 6.4)
-- **Relatório de conformidade** exportável por ponto e período
-- **Índice composto** `{ pontoId: 1, coletadoEm: -1 }` para a consulta mais frequente
-- **Quadro de tarefas** no GitHub Projects como evidência de metodologia
+- Índice de perdas por macromedição versus micromedição
+- Relatório de conformidade exportável por ponto e período
+- Índice composto `{ pontoId: 1, coletadoEm: -1 }` para a consulta mais frequente
 
 ---
 
-## 📄 Licença
+## Licença
 
 Distribuído sob a licença MIT. Veja [LICENSE](LICENSE).
 
