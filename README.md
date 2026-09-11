@@ -57,6 +57,7 @@ Prova de Conceito — AEP 2026.2 · 6º Semestre · Engenharia de Software
 |---|---|
 | **Repositório** | https://github.com/VictorSgobbi/aep-hidrovigia |
 | **Vídeo de demonstração** | https://www.youtube.com/watch?v=ym-w1ppuR4E |
+| **Versão da 1ª entrega** | tag [`v1.0-entrega1`](https://github.com/VictorSgobbi/aep-hidrovigia/releases/tag/v1.0-entrega1) |
 
 ---
 
