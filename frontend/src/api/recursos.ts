@@ -8,6 +8,7 @@ import type {
   ParametroCatalogado,
   PontoRequest,
   PontoResponse,
+  SituacaoColeta,
   StatusOcorrencia,
   TratativaRequest,
 } from './tipos'
@@ -113,6 +114,10 @@ export const indicadoresDoPonto = (codigoPonto: string) =>
   requisitar<IndicadoresConformidade>(
     `/painel/conformidade/${encodeURIComponent(codigoPonto)}`,
   )
+
+/** Pontos ativos com a rotina de coleta; vencidas primeiro, pelo servidor. */
+export const situacaoColetas = () =>
+  requisitar<SituacaoColeta[]>('/painel/coletas')
 
 /**
  * Catálogo da norma, em ordem significativa (microbiológicos primeiro). É a
