@@ -1,14 +1,20 @@
 package br.com.hidrovigia.api;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import br.com.hidrovigia.config.DominioConfig;
+import br.com.hidrovigia.dominio.parametro.ParametroDesconhecidoException;
 import br.com.hidrovigia.dominio.ponto.TipoFonte;
+import br.com.hidrovigia.repositorio.LeituraDiaria;
 import br.com.hidrovigia.servico.IndicadoresConformidade;
 import br.com.hidrovigia.servico.MonitoramentoColetaService;
 import br.com.hidrovigia.servico.PainelConformidadeService;
+import br.com.hidrovigia.servico.SerieHistorica;
+import br.com.hidrovigia.servico.SerieHistoricaService;
 import br.com.hidrovigia.servico.SituacaoColeta;
 import br.com.hidrovigia.servico.excecao.RecursoNaoEncontradoException;
 
@@ -38,6 +44,48 @@ class PainelControllerTest {
 
     @MockBean
     private MonitoramentoColetaService monitoramento;
+
+    @MockBean
+    private SerieHistoricaService serieHistorica;
+
+    @Test
+    @DisplayName("GET serie devolve os dias agregados com o limite da norma")
+    void serieHistorica() throws Exception {
+        Instant inicio = Instant.parse("2026-01-01T00:00:00Z");
+        Instant fim = Instant.parse("2026-01-31T00:00:00Z");
+        when(serieHistorica.serie("PMA-001", "TURB", inicio, fim)).thenReturn(
+                new SerieHistorica("PMA-001", "TURB", "Turbidez", "uT", null, new BigDecimal("5.0"),
+                        inicio, fim, List.of(new LeituraDiaria(LocalDate.of(2026, 1, 10),
+                        new BigDecimal("9.0"), new BigDecimal("9.750"), new BigDecimal("10.5"), 2, 2))));
+
+        mockMvc.perform(get("/api/painel/serie/PMA-001")
+                        .param("parametro", "TURB")
+                        .param("inicio", "2026-01-01T00:00:00Z")
+                        .param("fim", "2026-01-31T00:00:00Z"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.limiteMaximo").value(5.0))
+                .andExpect(jsonPath("$.limiteMinimo").doesNotExist())
+                .andExpect(jsonPath("$.dias[0].dia").value("2026-01-10"))
+                .andExpect(jsonPath("$.dias[0].media").value(9.75))
+                .andExpect(jsonPath("$.dias[0].foraDoLimite").value(2));
+    }
+
+    @Test
+    @DisplayName("GET serie devolve 422 para parametro fora do catalogo")
+    void serieParametroDesconhecido() throws Exception {
+        when(serieHistorica.serie("PMA-001", "CHUMBO", null, null))
+                .thenThrow(new ParametroDesconhecidoException("CHUMBO"));
+
+        mockMvc.perform(get("/api/painel/serie/PMA-001").param("parametro", "CHUMBO"))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    @DisplayName("GET serie exige o parametro")
+    void serieSemParametro() throws Exception {
+        mockMvc.perform(get("/api/painel/serie/PMA-001"))
+                .andExpect(status().isBadRequest());
+    }
 
     @Test
     @DisplayName("GET coletas devolve a situacao de cada ponto, com o ponto sem coleta sem datas")
