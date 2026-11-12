@@ -8,6 +8,7 @@ import { criarQueryClient } from '../../api/queryClient'
 import type {
   IndicadoresConformidade,
   OcorrenciaResponse,
+  SituacaoColeta,
 } from '../../api/tipos'
 import { PainelPage } from './PainelPage'
 
@@ -83,6 +84,7 @@ describe('PainelPage', () => {
         HttpResponse.json([OCORRENCIA_CRITICA]),
       ),
       http.get('/api/pontos', () => HttpResponse.json([])),
+      http.get('/api/painel/coletas', () => HttpResponse.json([])),
     )
 
     renderizar()
@@ -104,6 +106,52 @@ describe('PainelPage', () => {
     )
   })
 
+  it('lista so as coletas vencidas, distinguindo atrasada de nunca coletada', async () => {
+    const situacoes: SituacaoColeta[] = [
+      {
+        codigoPonto: 'PMA-004',
+        nomePonto: 'Cisterna Nova',
+        tipoFonte: 'CISTERNA',
+        frequenciaMinimaDias: 30,
+        vencida: true,
+      },
+      {
+        codigoPonto: 'PMA-002',
+        nomePonto: 'Manancial do Distrito',
+        tipoFonte: 'MANANCIAL_SUPERFICIAL',
+        frequenciaMinimaDias: 7,
+        ultimaColeta: '2026-01-01T12:00:00Z',
+        proximaColetaAte: '2026-01-08T12:00:00Z',
+        vencida: true,
+      },
+      {
+        codigoPonto: 'PMA-001',
+        nomePonto: 'Poco da Escola',
+        tipoFonte: 'POCO_ARTESIANO',
+        frequenciaMinimaDias: 30,
+        ultimaColeta: '2026-01-10T12:00:00Z',
+        proximaColetaAte: '2026-02-09T12:00:00Z',
+        vencida: false,
+      },
+    ]
+    servidor.use(
+      http.get('/api/painel/conformidade', () =>
+        HttpResponse.json(INDICADORES_DO_SEED),
+      ),
+      http.get('/api/ocorrencias', () => HttpResponse.json([])),
+      http.get('/api/pontos', () => HttpResponse.json([])),
+      http.get('/api/painel/coletas', () => HttpResponse.json(situacoes)),
+    )
+
+    renderizar()
+
+    expect(await screen.findByText('Nunca coletado')).toBeInTheDocument()
+    expect(screen.getByText('Coleta atrasada')).toBeInTheDocument()
+    expect(screen.getByText(/a próxima devia ter sido até 08\/01\/2026/)).toBeInTheDocument()
+    // O ponto em dia nao aparece: o bloco e um alerta, nao um inventario.
+    expect(screen.queryByText('PMA-001')).not.toBeInTheDocument()
+  })
+
   it('sem analise nenhuma, oferece registrar a primeira coleta', async () => {
     // E como o sistema abre numa base limpa. Sem isso, a tela mostraria 0,0%
     // e quatro zeros, o que parece defeito.
@@ -120,6 +168,7 @@ describe('PainelPage', () => {
       ),
       http.get('/api/ocorrencias', () => HttpResponse.json([])),
       http.get('/api/pontos', () => HttpResponse.json([])),
+      http.get('/api/painel/coletas', () => HttpResponse.json([])),
     )
 
     renderizar()
@@ -137,6 +186,7 @@ describe('PainelPage', () => {
       http.get('/api/painel/conformidade', () => HttpResponse.error()),
       http.get('/api/ocorrencias', () => HttpResponse.json([])),
       http.get('/api/pontos', () => HttpResponse.json([])),
+      http.get('/api/painel/coletas', () => HttpResponse.json([])),
     )
 
     renderizar()

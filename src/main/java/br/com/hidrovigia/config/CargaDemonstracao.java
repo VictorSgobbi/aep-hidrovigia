@@ -72,6 +72,13 @@ public class CargaDemonstracao implements CommandLineRunner {
                 TipoFonte.CISTERNA, 85,
                 new Localizacao("Sarandi", "PR", -23.4436, -51.8761),
                 new Responsavel("Marta Reis", null, "marta.reis@exemplo.org.br"));
+
+        // Cadastrado e nunca amostrado: aparece no alerta de coleta vencida sem
+        // mexer nos indicadores, que contam analises e nao pontos.
+        pontoService.cadastrar("PMA-004", "Nascente da Comunidade Santa Fe",
+                TipoFonte.NASCENTE, 140,
+                new Localizacao("Paicandu", "PR", -23.4575, -52.0461),
+                new Responsavel("Joao Pereira", null, "joao.pereira@exemplo.org.br"));
     }
 
     private void registrarAnalises() {

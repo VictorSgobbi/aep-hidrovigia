@@ -179,6 +179,20 @@ export interface IndicadoresConformidade {
   ocorrenciasVencidas: number
 }
 
+/**
+ * Rotina de coleta de um ponto ativo frente à frequência mínima do seu tipo
+ * de fonte. Ponto que nunca teve coleta chega sem as duas datas — e vencido.
+ */
+export interface SituacaoColeta {
+  codigoPonto: string
+  nomePonto: string
+  tipoFonte: TipoFonte
+  frequenciaMinimaDias: number
+  ultimaColeta?: Instante | undefined
+  proximaColetaAte?: Instante | undefined
+  vencida: boolean
+}
+
 export interface ParametroCatalogado {
   codigo: string
   nome: string

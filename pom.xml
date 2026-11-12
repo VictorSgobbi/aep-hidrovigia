@@ -99,15 +99,17 @@
         encostado no banco. Foi exatamente o que aconteceu aqui, e escondeu um
         defeito real (duas ocorrencias para a mesma analise).
 
-        1.41 e aceita por todo engine do Docker 20.10 (2020) ao 29, entao serve
-        igual na maquina de cada um e no runner da CI.
+        1.44 e o minimo que o Docker Engine 29 aceita (o 1.41 usado antes passou
+        a ser recusado com o mesmo HTTP 400), e e servida por todo engine desde
+        o Docker 25 (2024), entao serve igual na maquina de cada um e no runner
+        da CI.
       -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <systemPropertyVariables>
-            <api.version>1.41</api.version>
+            <api.version>1.44</api.version>
           </systemPropertyVariables>
         </configuration>
       </plugin>

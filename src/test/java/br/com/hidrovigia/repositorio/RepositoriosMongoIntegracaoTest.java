@@ -1,6 +1,7 @@
 package br.com.hidrovigia.repositorio;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 import br.com.hidrovigia.Fixtures;
@@ -167,6 +168,19 @@ class RepositoriosMongoIntegracaoTest {
         assertThat(analises.countByPontoIdAndResultadoConforme(ponto.getId(), false)).isEqualTo(1);
         assertThat(analises.countByPontoId(ponto.getId())).isEqualTo(2);
         assertThat(analises.findByPontoIdOrderByColetadoEmDesc(ponto.getId())).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("cria o indice composto do historico por ponto, coleta mais recente primeiro")
+    void criaIndiceCompostoDoHistorico() {
+        List<Document> indices = template.getCollection("analises")
+                .listIndexes().into(new ArrayList<>());
+
+        assertThat(indices)
+                .filteredOn(indice -> "ponto_coleta".equals(indice.getString("name")))
+                .singleElement()
+                .satisfies(indice -> assertThat(indice.get("key", Document.class))
+                        .isEqualTo(new Document("pontoId", 1).append("coletadoEm", -1)));
     }
 
     @Test
