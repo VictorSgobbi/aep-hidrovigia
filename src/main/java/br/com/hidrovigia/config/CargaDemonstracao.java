@@ -84,6 +84,22 @@ public class CargaDemonstracao implements CommandLineRunner {
     private void registrarAnalises() {
         Instant agora = Instant.now();
 
+        // Historico do PMA-001, para a serie historica ter forma: o cloro
+        // residual cai semana a semana ate encostar no minimo de 0,2 mg/L —
+        // tudo conforme, mas a tendencia e o que a vigilancia precisa ver.
+        String[][] historico = {
+                {"60", "1.4", "7.0", "0.4"},
+                {"45", "1.1", "7.2", "0.5"},
+                {"30", "0.7", "7.3", "0.9"},
+                {"21", "0.3", "7.1", "1.1"},
+        };
+        for (String[] semana : historico) {
+            analiseService.registrar("PMA-001", "Tecnico Bruno",
+                    agora.minus(Long.parseLong(semana[0]), ChronoUnit.DAYS),
+                    leituras("ECOLI", "0", "CTOT", "0", "CRL", semana[1], "PH", semana[2],
+                            "TURB", semana[3]));
+        }
+
         // Rotina normal: tudo dentro do padrao.
         analiseService.registrar("PMA-001", "Tecnico Bruno", agora.minus(7, ChronoUnit.DAYS),
                 leituras("ECOLI", "0", "CTOT", "0", "CRL", "0.9", "PH", "7.1", "TURB", "0.6"));
