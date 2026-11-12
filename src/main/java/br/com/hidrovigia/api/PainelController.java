@@ -6,7 +6,9 @@ import java.util.List;
 import br.com.hidrovigia.dominio.parametro.CatalogoParametros;
 import br.com.hidrovigia.dominio.parametro.RiscoSanitario;
 import br.com.hidrovigia.servico.IndicadoresConformidade;
+import br.com.hidrovigia.servico.MonitoramentoColetaService;
 import br.com.hidrovigia.servico.PainelConformidadeService;
+import br.com.hidrovigia.servico.SituacaoColeta;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,10 +24,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class PainelController {
 
     private final PainelConformidadeService painel;
+    private final MonitoramentoColetaService monitoramento;
     private final CatalogoParametros catalogo;
 
-    public PainelController(PainelConformidadeService painel, CatalogoParametros catalogo) {
+    public PainelController(PainelConformidadeService painel,
+                            MonitoramentoColetaService monitoramento,
+                            CatalogoParametros catalogo) {
         this.painel = painel;
+        this.monitoramento = monitoramento;
         this.catalogo = catalogo;
     }
 
@@ -39,6 +45,12 @@ public class PainelController {
     @Operation(summary = "Consolidado de conformidade de um ponto")
     public IndicadoresConformidade porPonto(@PathVariable String codigoPonto) {
         return painel.porPonto(codigoPonto);
+    }
+
+    @GetMapping("/coletas")
+    @Operation(summary = "Rotina de coleta dos pontos ativos, coletas vencidas primeiro")
+    public List<SituacaoColeta> coletas() {
+        return monitoramento.situacaoDosPontosAtivos();
     }
 
     @GetMapping("/parametros")
