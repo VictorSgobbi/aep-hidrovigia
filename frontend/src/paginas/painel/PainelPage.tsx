@@ -16,6 +16,7 @@ import { formatarNumero, formatarPercentual } from '../../dominio/formatos'
 import { estadoDoPrazo } from '../../dominio/prazos'
 import { useAgora } from '../../hooks/useAgora'
 import { ColetasVencidas } from './ColetasVencidas'
+import { SerieHistorica } from './SerieHistorica'
 import './PainelPage.css'
 
 const GERAL = 'geral'
@@ -124,6 +125,8 @@ export function PainelPage() {
             />
           </ul>
         ))}
+
+      {escopo !== GERAL && <SerieHistorica codigoPonto={escopo} />}
 
       <ColetasVencidas />
 

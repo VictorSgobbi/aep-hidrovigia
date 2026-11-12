@@ -1,5 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
 import { MemoryRouter } from 'react-router-dom'
@@ -8,6 +9,7 @@ import { criarQueryClient } from '../../api/queryClient'
 import type {
   IndicadoresConformidade,
   OcorrenciaResponse,
+  SerieHistorica,
   SituacaoColeta,
 } from '../../api/tipos'
 import { PainelPage } from './PainelPage'
@@ -30,10 +32,10 @@ afterAll(() => servidor.close())
 // demonstracao, conferido contra a API rodando.
 const INDICADORES_DO_SEED: IndicadoresConformidade = {
   escopo: 'geral',
-  totalAnalises: 5,
-  analisesConformes: 2,
+  totalAnalises: 9,
+  analisesConformes: 6,
   analisesNaoConformes: 3,
-  percentualConformidade: 40,
+  percentualConformidade: 66.67,
   ocorrenciasPendentes: 3,
   ocorrenciasVencidas: 0,
 }
@@ -91,9 +93,9 @@ describe('PainelPage', () => {
 
     // Percentual em formato brasileiro, e nunca sozinho: o texto de apoio diz
     // de quantas analises ele saiu.
-    expect(await screen.findByText('40,0%')).toBeInTheDocument()
+    expect(await screen.findByText('66,7%')).toBeInTheDocument()
     expect(
-      screen.getByText('2 de 5 análises dentro do padrão'),
+      screen.getByText('6 de 9 análises dentro do padrão'),
     ).toBeInTheDocument()
 
     // A pendencia aparece com gravidade, prazo e o parametro violado.
@@ -150,6 +152,52 @@ describe('PainelPage', () => {
     expect(screen.getByText(/a próxima devia ter sido até 08\/01\/2026/)).toBeInTheDocument()
     // O ponto em dia nao aparece: o bloco e um alerta, nao um inventario.
     expect(screen.queryByText('PMA-001')).not.toBeInTheDocument()
+  })
+
+  it('ao escolher um ponto, desenha a serie e lista os dias fora do limite', async () => {
+    const serie: SerieHistorica = {
+      codigoPonto: 'PMA-001',
+      codigoParametro: 'CRL',
+      nomeParametro: 'Cloro residual livre',
+      unidade: 'mg/L',
+      limiteMinimo: 0.2,
+      limiteMaximo: 2,
+      inicio: '2026-01-01T00:00:00Z',
+      fim: '2026-03-31T00:00:00Z',
+      dias: [
+        { dia: '2026-01-10', minimo: 1.4, media: 1.4, maximo: 1.4, leituras: 1, foraDoLimite: 0 },
+        { dia: '2026-02-10', minimo: 0.1, media: 0.1, maximo: 0.1, leituras: 1, foraDoLimite: 1 },
+      ],
+    }
+    const pedidos: string[] = []
+    servidor.use(
+      http.get('/api/painel/conformidade/PMA-001', () =>
+        HttpResponse.json({ ...INDICADORES_DO_SEED, escopo: 'PMA-001' }),
+      ),
+      http.get('/api/ocorrencias', () => HttpResponse.json([])),
+      http.get('/api/pontos', () =>
+        HttpResponse.json([{ id: 'ponto-1', codigo: 'PMA-001', nome: 'Poco da Escola' }]),
+      ),
+      http.get('/api/painel/coletas', () => HttpResponse.json([])),
+      http.get('/api/painel/parametros', () => HttpResponse.json([])),
+      http.get('/api/painel/serie/PMA-001', ({ request }) => {
+        pedidos.push(new URL(request.url).search)
+        return HttpResponse.json(serie)
+      }),
+    )
+
+    renderizar()
+    await userEvent.selectOptions(
+      await screen.findByLabelText('Escopo'),
+      await screen.findByRole('option', { name: /PMA-001/ }),
+    )
+
+    expect(
+      await screen.findByRole('img', { name: /Cloro residual livre em 2 dias/ }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/fora do limite em 10\/02\/2026\./)).toBeInTheDocument()
+    // Cloro residual e o parametro inicial: e onde a tendencia antecede o desvio.
+    expect(pedidos).toEqual(['?parametro=CRL'])
   })
 
   it('sem analise nenhuma, oferece registrar a primeira coleta', async () => {
