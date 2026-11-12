@@ -18,7 +18,7 @@ import org.springframework.stereotype.Repository;
  * analise para saber quantas reprovaram.
  */
 @Repository
-public interface AnaliseRepository extends MongoRepository<Analise, String> {
+public interface AnaliseRepository extends MongoRepository<Analise, String>, AnaliseRepositoryCustom {
 
     List<Analise> findByPontoIdOrderByColetadoEmDesc(String pontoId);
 

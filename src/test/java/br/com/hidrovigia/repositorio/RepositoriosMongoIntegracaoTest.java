@@ -1,6 +1,8 @@
 package br.com.hidrovigia.repositorio;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -181,6 +183,48 @@ class RepositoriosMongoIntegracaoTest {
                 .singleElement()
                 .satisfies(indice -> assertThat(indice.get("key", Document.class))
                         .isEqualTo(new Document("pontoId", 1).append("coletadoEm", -1)));
+    }
+
+    @Test
+    @DisplayName("agrega a serie diaria de um parametro com $toDecimal, $dateTrunc e $group")
+    void agregaSerieDiaria() {
+        PontoMonitoramento ponto = pontos.save(Fixtures.pontoNovo());
+        PontoMonitoramento outro = pontos.save(PontoMonitoramento.cadastrar("PMA-009", "Outro",
+                TipoFonte.CISTERNA, 10, Fixtures.localizacao(), Fixtures.responsavel()));
+        Instant dia1 = Instant.parse("2026-01-10T08:00:00Z");
+        Instant dia2 = Instant.parse("2026-01-12T09:00:00Z");
+
+        // Dois valores no mesmo dia: "10.5" e "9.0" — comparados como texto,
+        // "10.5" seria o minimo. O $toDecimal e o que torna o $min numerico.
+        coletar(ponto, dia1, "TURB", "10.5");
+        coletar(ponto, dia1.plus(5, ChronoUnit.HOURS), "TURB", "9.0");
+        coletar(ponto, dia2, "TURB", "1.2");
+        // Fora do filtro: outro parametro, outro ponto e fora do periodo.
+        coletar(ponto, dia2, "PH", "7.0");
+        coletar(outro, dia2, "TURB", "99");
+        coletar(ponto, Instant.parse("2025-12-01T08:00:00Z"), "TURB", "50");
+
+        List<LeituraDiaria> serie = analises.serieDiaria(ponto.getId(), "TURB",
+                Instant.parse("2026-01-01T00:00:00Z"), Instant.parse("2026-01-15T00:00:00Z"));
+
+        assertThat(serie).hasSize(2);
+        LeituraDiaria primeiro = serie.get(0);
+        assertThat(primeiro.dia()).isEqualTo(LocalDate.of(2026, 1, 10));
+        assertThat(primeiro.minimo()).isEqualByComparingTo("9.0");
+        assertThat(primeiro.maximo()).isEqualByComparingTo("10.5");
+        assertThat(primeiro.media()).isEqualByComparingTo("9.75");
+        assertThat(primeiro.leituras()).isEqualTo(2);
+        assertThat(primeiro.foraDoLimite()).as("turbidez acima de 5 uT reprova").isEqualTo(2);
+
+        LeituraDiaria segundo = serie.get(1);
+        assertThat(segundo.dia()).isEqualTo(LocalDate.of(2026, 1, 12));
+        assertThat(segundo.media()).isEqualByComparingTo("1.2");
+        assertThat(segundo.foraDoLimite()).isZero();
+    }
+
+    private void coletar(PontoMonitoramento ponto, Instant em, String codigo, String valor) {
+        analises.save(Analise.registrar(ponto, "Bruno", em,
+                List.of(Fixtures.avaliar(codigo, valor))));
     }
 
     @Test
