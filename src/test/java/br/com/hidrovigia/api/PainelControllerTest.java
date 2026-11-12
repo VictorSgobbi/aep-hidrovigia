@@ -1,8 +1,15 @@
 package br.com.hidrovigia.api;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+
 import br.com.hidrovigia.config.DominioConfig;
+import br.com.hidrovigia.dominio.ponto.TipoFonte;
 import br.com.hidrovigia.servico.IndicadoresConformidade;
+import br.com.hidrovigia.servico.MonitoramentoColetaService;
 import br.com.hidrovigia.servico.PainelConformidadeService;
+import br.com.hidrovigia.servico.SituacaoColeta;
 import br.com.hidrovigia.servico.excecao.RecursoNaoEncontradoException;
 
 import org.junit.jupiter.api.DisplayName;
@@ -28,6 +35,30 @@ class PainelControllerTest {
 
     @MockBean
     private PainelConformidadeService painel;
+
+    @MockBean
+    private MonitoramentoColetaService monitoramento;
+
+    @Test
+    @DisplayName("GET coletas devolve a situacao de cada ponto, com o ponto sem coleta sem datas")
+    void situacaoDasColetas() throws Exception {
+        Instant ultima = Instant.parse("2026-01-01T10:00:00Z");
+        when(monitoramento.situacaoDosPontosAtivos()).thenReturn(List.of(
+                new SituacaoColeta("PMA-002", "Manancial do Distrito",
+                        TipoFonte.MANANCIAL_SUPERFICIAL, 7, null, null, true),
+                new SituacaoColeta("PMA-001", "Poco da Escola", TipoFonte.POCO_ARTESIANO, 30,
+                        ultima, ultima.plus(30, ChronoUnit.DAYS), false)));
+
+        mockMvc.perform(get("/api/painel/coletas"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].codigoPonto").value("PMA-002"))
+                .andExpect(jsonPath("$[0].vencida").value(true))
+                .andExpect(jsonPath("$[0].ultimaColeta").doesNotExist())
+                .andExpect(jsonPath("$[1].tipoFonte").value("POCO_ARTESIANO"))
+                .andExpect(jsonPath("$[1].frequenciaMinimaDias").value(30))
+                .andExpect(jsonPath("$[1].proximaColetaAte").value("2026-01-31T10:00:00Z"));
+    }
 
     @Test
     @DisplayName("GET conformidade devolve o consolidado geral")

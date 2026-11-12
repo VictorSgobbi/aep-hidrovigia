@@ -15,6 +15,7 @@ import { SeloGravidade, SeloStatus } from '../../componentes/Selo'
 import { formatarNumero, formatarPercentual } from '../../dominio/formatos'
 import { estadoDoPrazo } from '../../dominio/prazos'
 import { useAgora } from '../../hooks/useAgora'
+import { ColetasVencidas } from './ColetasVencidas'
 import './PainelPage.css'
 
 const GERAL = 'geral'
@@ -123,6 +124,8 @@ export function PainelPage() {
             />
           </ul>
         ))}
+
+      <ColetasVencidas />
 
       <section className="secao" aria-labelledby="titulo-fila">
         <div className="secao__cabecalho">
