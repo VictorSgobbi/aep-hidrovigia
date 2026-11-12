@@ -129,6 +129,21 @@ test('registrar coleta contaminada abre, trata e encerra a ocorrencia', async ({
   expect(await pendenciasNoPainel(page)).toBe(pendenciasAntes)
 })
 
+test('o painel mostra o alerta de coleta vencida servido pela API', async ({
+  page,
+}) => {
+  await page.goto('/painel')
+  const bloco = page.getByRole('region', { name: 'Coletas vencidas' })
+
+  await expect(bloco).toBeVisible()
+  // Base virgem tem o PMA-004, nunca coletado; numa base de ensaio ele pode ja
+  // ter recebido coleta. As duas saidas validas sao o alerta ou o vazio — nunca
+  // o carregamento parado ou o aviso de erro.
+  await expect(
+    bloco.getByText(/Nunca coletado|Coleta atrasada|Todos os pontos ativos/).first(),
+  ).toBeVisible()
+})
+
 test('um refresh numa rota da interface carrega a aplicacao, e nao um 404', async ({
   page,
 }) => {
