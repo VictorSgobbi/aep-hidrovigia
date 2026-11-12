@@ -2,6 +2,7 @@ package br.com.hidrovigia.repositorio;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import br.com.hidrovigia.dominio.analise.Analise;
 
@@ -20,6 +21,9 @@ import org.springframework.stereotype.Repository;
 public interface AnaliseRepository extends MongoRepository<Analise, String> {
 
     List<Analise> findByPontoIdOrderByColetadoEmDesc(String pontoId);
+
+    /** Ultima coleta do ponto; resolvida pelo indice composto, sem ordenar em memoria. */
+    Optional<Analise> findFirstByPontoIdOrderByColetadoEmDesc(String pontoId);
 
     List<Analise> findByColetadoEmBetweenOrderByColetadoEmDesc(Instant inicio, Instant fim);
 
