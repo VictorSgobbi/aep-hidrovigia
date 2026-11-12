@@ -8,6 +8,7 @@ import type {
   ParametroCatalogado,
   PontoRequest,
   PontoResponse,
+  SerieHistorica,
   SituacaoColeta,
   StatusOcorrencia,
   TratativaRequest,
@@ -118,6 +119,12 @@ export const indicadoresDoPonto = (codigoPonto: string) =>
 /** Pontos ativos com a rotina de coleta; vencidas primeiro, pelo servidor. */
 export const situacaoColetas = () =>
   requisitar<SituacaoColeta[]>('/painel/coletas')
+
+/** Sem período, o servidor devolve os últimos 90 dias. */
+export const serieHistorica = (codigoPonto: string, parametro: string) =>
+  requisitar<SerieHistorica>(
+    `/painel/serie/${encodeURIComponent(codigoPonto)}${query({ parametro })}`,
+  )
 
 /**
  * Catálogo da norma, em ordem significativa (microbiológicos primeiro). É a

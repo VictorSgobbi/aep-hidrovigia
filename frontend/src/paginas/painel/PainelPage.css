@@ -44,3 +44,46 @@
   font-weight: 400;
   color: var(--cor-texto-fraco);
 }
+
+.serie {
+  display: grid;
+  gap: var(--e-2);
+  margin: 0;
+}
+
+.serie__grafico {
+  width: 100%;
+  height: auto;
+}
+
+.serie__linha {
+  fill: none;
+  stroke: var(--cor-marca);
+  stroke-width: 2;
+}
+
+.serie__ponto {
+  fill: var(--cor-marca);
+  stroke: var(--cor-superficie);
+  stroke-width: 2;
+}
+
+.serie__ponto--fora {
+  fill: var(--cor-critica);
+}
+
+.serie__limite line {
+  stroke: var(--cor-texto-fraco);
+  stroke-dasharray: 6 4;
+}
+
+.serie__limite text,
+.serie__eixo {
+  fill: var(--cor-texto-fraco);
+  font-size: 12px;
+}
+
+.serie__legenda {
+  font-size: var(--t-pequeno);
+  color: var(--cor-texto-fraco);
+}
