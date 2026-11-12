@@ -9,6 +9,7 @@ import br.com.hidrovigia.dominio.ponto.PontoMonitoramento;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceCreator;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -24,14 +25,19 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * <p>A analise nasce fechada: depois de registrada, nenhum parametro entra ou
  * sai. Corrigir uma coleta significa registrar outra analise, nao editar a
  * anterior — o historico de vigilancia precisa ser imutavel.
+ *
+ * <p>O indice composto {@code { pontoId: 1, coletadoEm: -1 }} atende a consulta
+ * mais frequente — o historico de um ponto, da coleta mais recente para a mais
+ * antiga — sem ordenar em memoria. Pelo prefixo, ele tambem serve as contagens
+ * por ponto, entao {@code pontoId} dispensa indice proprio.
  */
 @Document(collection = "analises")
+@CompoundIndex(name = "ponto_coleta", def = "{'pontoId': 1, 'coletadoEm': -1}")
 public class Analise {
 
     @Id
     private String id;
 
-    @Indexed
     private String pontoId;
 
     private String pontoCodigo;
