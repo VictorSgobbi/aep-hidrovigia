@@ -624,16 +624,20 @@ aep-hidrovigia/
 ### Como o trabalho é organizado
 
 - **Quadro de tarefas** — [GitHub Projects](https://github.com/users/Leocm123/projects/1),
-  com as colunas *A fazer*, *Em andamento*, *Em revisão* e *Feito*. Cada entrega vira
+  com os status *A fazer*, *Em andamento*, *Em revisão* e *Feito*. Cada entrega vira
   issues atribuídas pela trilha de cada integrante.
-- **Uma branch e um pull request por tarefa**, com `Closes #n` ligando o PR à issue —
-  a issue fecha sozinha quando o PR é integrado.
+- **Uma branch e um pull request por tarefa**, ligado à sua issue — com `Closes #n`, a
+  issue fecha sozinha quando o PR é integrado. A exceção é o
+  [#9](https://github.com/VictorSgobbi/aep-hidrovigia/pull/9), integrado sem a referência:
+  a [#15](https://github.com/VictorSgobbi/aep-hidrovigia/issues/15) foi fechada à mão e
+  aponta para ele.
 - **Revisão cruzada**: as evoluções da 2ª entrega ([#8](https://github.com/VictorSgobbi/aep-hidrovigia/pull/8),
   [#9](https://github.com/VictorSgobbi/aep-hidrovigia/pull/9),
   [#22](https://github.com/VictorSgobbi/aep-hidrovigia/pull/22)) foram escritas por um
   integrante e revisadas e integradas por outro.
-- **CI obrigatória**: a branch `main` é protegida e só recebe PR com o check de testes
-  e cobertura verde.
+- **CI em todo pull request**: os três jobs rodam a cada push e PR, e a equipe só integra
+  com eles verdes. A branch `main` é protegida contra exclusão; a exigência do check
+  não está configurada como regra do GitHub, é acordo da equipe.
 - **Conventional Commits** em português, no imperativo — regras completas em
   [CONTRIBUTING.md](CONTRIBUTING.md).
 
