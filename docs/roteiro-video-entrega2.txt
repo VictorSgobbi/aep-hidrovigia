@@ -3,16 +3,21 @@
 ================================================================================
 
   Duracao exigida pelo edital: 3 a 5 minutos
-  Duracao alvo deste roteiro:  4min10s
+  Duracao alvo deste roteiro:  4min40s
+
+  O edital pede que o video apresente (secao 10):
+    [1] a evolucao da solucao ............ Bloco 1
+    [2] o projeto final (arquitetura) .... Blocos 1 e 2
+    [3] a demonstracao da PoC ............ Bloco 3
+    [4] as tecnologias utilizadas ........ Bloco 1
+    [5] os testes e a cobertura obtida ... Bloco 4
+    [6] os principais resultados ......... Bloco 4
 
   Equipe:
-    Victor Sgobbi ....... Bloco 1 - O que evoluiu e por que
-    Bruno ............... Bloco 2 - Modelagem e o defeito que os testes acharam
-    Leonardo ............ Bloco 3 - A interface funcionando
-
-  Diferenca em relacao a 1a entrega: a demonstracao agora acontece na
-  interface, e nao no Swagger. O Swagger aparece de passagem, como prova de
-  que o contrato da API continua publicado.
+    Victor Sgobbi ....... Bloco 1 - Evolucao, arquitetura e tecnologias
+    Bruno ............... Bloco 2 - Banco: indice, agregacao e o defeito
+    Leonardo ............ Bloco 3 - A PoC funcionando
+    Victor .............. Bloco 4 - Testes, cobertura e resultados
 
 --------------------------------------------------------------------------------
   AMBIENTE (conferir ANTES de gravar)
@@ -26,151 +31,210 @@
   [ ] Um comando serve tudo:
         ./mvnw -Pfrontend spring-boot:run
 
-  [ ] Interface aberta:  http://localhost:8080/
-  [ ] Swagger em outra aba: http://localhost:8080/swagger-ui.html
-  [ ] Relatorio de cobertura em outra aba: target/site/jacoco/index.html
+  [ ] Abas abertas, nesta ordem:
+        1. Slide de abertura (problema + ODS 6)
+        2. Slide de arquitetura e tecnologias (ver BLOCO 1)
+        3. Interface:        http://localhost:8080/
+        4. Mongo Express:    http://localhost:8081   (docker compose --profile ferramentas up -d)
+        5. Relatorio JaCoCo: target/site/jacoco/index.html
+        6. GitHub Actions:   ultima execucao do main, com os tres jobs verdes
+        7. Quadro de tarefas: https://github.com/users/Leocm123/projects/1
+
+  [ ] Terminal com a saida do ./mvnw clean verify ja rodado (BUILD SUCCESS e a
+      linha "Tests run: 205, Failures: 0, Errors: 0, Skipped: 0" visiveis).
+      NAO rodar ao vivo: leva minutos.
+
   [ ] Zoom do navegador em 110% ou 125%: numero pequeno nao aparece no video
-  [ ] Conferir que o painel mostra 40,0% de conformidade e 3 pendencias
 
-  [ ] Se for mostrar a CI: a aba do Actions com os tres jobs verdes
-
---------------------------------------------------------------------------------
-  BLOCO 1 - VICTOR - 0:00 a 1:05 - O que evoluiu
---------------------------------------------------------------------------------
-
-  TELA: Slide de abertura, depois o painel da aplicacao.
-
-  "HidroVigia, vigilancia da qualidade da agua em sistemas de abastecimento de
-   pequeno porte. Na primeira entrega mostramos que a regra funcionava; nesta,
-   mostramos o produto.
-
-   O problema que ele resolve e o intervalo entre detectar um resultado fora do
-   padrao e agir sobre ele. Esse intervalo e onde mora o risco sanitario, e ele
-   nao aparece num formulario de documentacao de API: prazo que corre, fila
-   ordenada por urgencia e gravidade classificada por norma precisam de tela.
-
-   [TROCAR PARA O PAINEL]
-
-   Isto e o sistema agora. Quarenta por cento de conformidade, tres pendencias
-   abertas, nenhuma fora do prazo. Os limites continuam vindo da Portaria
-   GM/MS 888 de 2021 — nao ha critario inventado pela equipe."
-
-  DICA: deixar o painel ja carregado antes de trocar, para nao gravar o
-        estado de carregamento.
+  [ ] Conferir no painel, com "Todos os pontos":
+        66,7% de conformidade, 9 analises, 3 pendencias, 0 prazos vencidos
+        "Coletas vencidas": PMA-004, "Nunca coletado"
 
 --------------------------------------------------------------------------------
-  BLOCO 2 - BRUNO - 1:05 a 2:15 - Modelagem e o que os testes acharam
+  BLOCO 1 - VICTOR - 0:00 a 1:10 - Evolucao, arquitetura e tecnologias
 --------------------------------------------------------------------------------
 
-  TELA: Mongo Express com as tres colecoes, depois a IDE.
+  TELA: Slide de abertura.
 
-  "Tres colecoes, com subdocumentos aninhados em todas: pontos, analises e
-   ocorrencias.
+  "HidroVigia: vigilancia da qualidade da agua em sistemas de abastecimento
+   de pequeno porte, alinhado ao ODS 6, agua potavel e saneamento. Os limites
+   que o sistema aplica sao os da Portaria GM/MS 888 de 2021 - nao ha criterio
+   inventado pela equipe.
 
-   [MOSTRAR UM DOCUMENTO DE 'analises' JA EXPANDIDO]
+   Na primeira entrega mostramos o fluxo principal: registrar a coleta, abrir
+   a ocorrencia com prazo e trata-la ate o fim. Mas esse fluxo so enxerga o
+   que foi medido. Um ponto que deixa de ser amostrado nunca reprova nada - e
+   some do radar. E uma ocorrencia so aparece quando o desvio ja aconteceu.
 
-   O limite aplicado fica gravado dentro de cada parametro. Norma muda, e uma
-   analise de 2026 precisa continuar mostrando o limite que valia em 2026 —
-   sem isso o historico deixa de ser auditavel.
+   Nesta entrega o sistema passou a enxergar as duas coisas: o ponto esquecido,
+   com o alerta de coleta vencida, e a tendencia antes do desvio, com a serie
+   historica de cada parametro."
 
-   Nesta entrega a modelagem ganhou uma garantia que faltava: analiseId agora
-   tem indice unico. A consulta que busca a ocorrencia de uma analise devolve
-   no maximo uma, e isso era so uma intencao documentada. Duas requisicoes
-   concorrentes criariam duas ocorrencias e a consulta passaria a falhar.
+  TELA: Slide de arquitetura e tecnologias.
 
-   O defeito apareceu quando os testes de integracao voltaram a rodar. Eles
-   estavam sendo pulados em silencio: o Docker atual recusa a versao de API
-   que a biblioteca pedia, e o Testcontainers lia isso como 'nao existe Docker
-   aqui'. O build ficava verde sem nunca ter encostado no banco. Hoje a CI
-   reprova se essa suite for pulada."
+        +-----------------------------------------------------------+
+        |  React 19 + TypeScript   (interface, no mesmo jar)        |
+        |        | HTTP                                             |
+        |  api/        Spring Boot 3 - controllers REST + Swagger   |
+        |  servico/    casos de uso                                 |
+        |  repositorio/ Spring Data + agregacao                     |
+        |  dominio/    Java 21, sem Spring                          |
+        |        |                                                  |
+        |  MongoDB 7 - 3 colecoes                                   |
+        |                                                           |
+        |  Testes: JUnit 5, Mockito, Testcontainers, Vitest,        |
+        |          Playwright  -  Cobertura: JaCoCo  -  CI: Actions |
+        +-----------------------------------------------------------+
 
-  DICA: essa e a parte mais forte do bloco. Suite que nao roda e pior que
-        suite que falha, e a equipe tem a cicatriz para provar.
+  "A arquitetura final: uma interface React servida pelo mesmo jar do Spring
+   Boot, em Java 21, sobre MongoDB 7. As camadas dependem sempre para dentro:
+   o dominio, onde ficam as regras da norma, nao conhece o Spring - por isso
+   ele e testado sem subir nada. E e ali que estao os padroes de orientacao a
+   objetos: Template Method e polimorfismo nos parametros, Strategy na
+   gravidade, State no ciclo da ocorrencia."
 
 --------------------------------------------------------------------------------
-  BLOCO 3 - LEONARDO - 2:15 a 4:10 - A interface funcionando
+  BLOCO 2 - BRUNO - 1:10 a 2:10 - Banco: indice, agregacao e o defeito
 --------------------------------------------------------------------------------
 
-  TELA: a aplicacao em tela cheia. ESTA PARTE E AO VIVO.
+  TELA: Mongo Express, colecao 'analises', um documento ja expandido.
 
-  1. >>> ACAO: ir para OCORRENCIAS <<<
+  "Tres colecoes - pontos, analises e ocorrencias - relacionadas por
+   identificador, com subdocumentos aninhados em todas. Cada parametro medido
+   guarda o limite que foi aplicado: norma muda, e uma analise de 2026 precisa
+   continuar mostrando o limite de 2026.
 
-     "A fila de pendencias, ordenada pelo prazo mais proximo de vencer. A
-      ordem vem do servidor, e cada item mostra a gravidade com o prazo da
-      norma: critica, 24 horas."
+   Nesta entrega o banco ganhou um indice composto, ponto e data de coleta
+   decrescente. E a consulta mais frequente: o historico de um ponto. O alerta
+   de coleta vencida busca a ultima coleta de cada ponto, e ela e o primeiro
+   item desse indice."
 
-  2. >>> ACAO: abrir a ocorrencia critica <<<
+  TELA: docs/modelagem-nosql.md, secao "Agregacao", com o pipeline visivel.
 
-     "O parametro violado, o valor medido e o limite que foi aplicado. E, aqui,
-      'classificada por: pior risco sanitario da amostra' — a gravidade nao e
-      palpite, e o resultado de uma politica que a ocorrencia grava."
+  "A serie historica e calculada pelo proprio MongoDB, num pipeline de
+   agregacao: filtra o ponto e o periodo, desdobra o array de parametros e
+   agrupa por dia com minimo, media e maximo. Um detalhe: o valor e gravado
+   como texto, para nao perder casas decimais. Comparado como texto, 10,5 e
+   menor que 9. Por isso o pipeline converte para decimal antes - e o teste de
+   integracao, contra um MongoDB de verdade, cobre exatamente esse caso.
 
-  3. >>> ACAO: registrar uma tratativa <<<
+   E falando em teste de integracao: nesta entrega descobrimos que eles
+   estavam sendo pulados em silencio. O Docker novo passou a recusar a versao
+   de API que o projeto pedia, o Testcontainers entendeu que nao havia Docker,
+   e o build ficava verde sem ter encostado no banco. Corrigimos, e a CI
+   reprova se qualquer suite for pulada."
 
-     "A vigilancia registra a acao. O status muda para 'em tratativa' e o prazo
-      continua correndo — resolver e outra coisa, e e definitivo."
+  DICA: essa ultima frase e a mais forte do bloco. Suite que nao roda parece
+        suite que passa.
 
-  4. >>> ACAO: ir para COLETAS, escolher PMA-003 <<<
+--------------------------------------------------------------------------------
+  BLOCO 3 - LEONARDO - 2:10 a 3:50 - A PoC funcionando
+--------------------------------------------------------------------------------
 
-     "Agora o caso central. O formulario e montado pelo catalogo da norma: uma
-      linha por parametro, na ordem em que ela os organiza, microbiologicos
-      primeiro."
+  TELA: a aplicacao em tela cheia, no PAINEL. ESTA PARTE E AO VIVO.
 
-  5. >>> ACAO: marcar ECOLI e digitar 14; marcar CTOT e digitar 62 <<<
+  1. >>> painel ja aberto em "Todos os pontos" <<<
 
-     "A previa acusa 'fora do limite' enquanto digito. E previa: o veredito que
-      vale e o do servidor, que e quem aplica a norma."
+     "Sessenta e seis virgula sete por cento de conformidade, tres pendencias
+      abertas. E, aqui embaixo, o que e novo: coletas vencidas. O PMA-004, uma
+      nascente, foi cadastrado e nunca teve coleta - nenhuma analise reprovou,
+      mas ninguem sabe se essa agua e potavel."
 
-  6. >>> ACAO: clicar em REGISTRAR COLETA <<<
+  2. >>> no Escopo, escolher PMA-001 <<<
 
-     "Nao conforme, com o veredito de cada parametro. E, junto,
-      'uma ocorrencia foi aberta automaticamente' — critica, 24 horas."
+     "Ao escolher um ponto, a serie historica. Cloro residual livre no poco da
+      escola: todas as coletas conformes, mas o cloro caiu semana a semana ate
+      encostar no minimo de 0,2. Nenhum alarme tocou - e e exatamente a
+      tendencia que a vigilancia precisa ver antes que vire contaminacao."
 
-  7. >>> ACAO: clicar em 'Abrir na fila de pendencias' <<<
+  3. >>> ir para COLETAS, escolher PMA-003 <<<
 
-     "A mesma ocorrencia, agora na fila. Foi o proprio sistema que a abriu."
+     "Agora o fluxo principal. O formulario e montado pelo catalogo da norma,
+      microbiologicos primeiro."
 
-  8. >>> ACAO: encerrar a ocorrencia, confirmando <<<
+  4. >>> marcar ECOLI e digitar 14; marcar CTOT e digitar 62 <<<
 
-     "Encerrar pede confirmacao porque nao existe reabertura: resolvida e um
-      estado terminal no dominio."
+     "A previa acusa 'fora do limite' enquanto digito - o veredito que vale e o
+      do servidor."
 
-  9. >>> ACAO: voltar ao PAINEL <<<
+  5. >>> clicar em REGISTRAR COLETA <<<
 
-     "Os numeros mudaram. Esse encadeamento — coleta, ocorrencia, tratativa,
-      painel — e o que fecha o intervalo entre detectar e agir."
+     "Nao conforme, e uma ocorrencia foi aberta automaticamente: critica, prazo
+      de 24 horas, porque a gravidade segue o pior risco sanitario da amostra."
 
- 10. >>> ACAO (se houver tempo): trocar para a aba do Swagger <<<
+  6. >>> clicar em 'Abrir na fila de pendencias' <<<
 
-     "O contrato da API segue publicado, servido pelo mesmo jar."
+     "A ocorrencia na fila, ordenada pelo prazo mais proximo de vencer."
+
+  7. >>> registrar uma tratativa e depois encerrar, confirmando <<<
+
+     "A vigilancia registra a acao e encerra. Encerrar pede confirmacao porque
+      resolvida e um estado terminal - nao existe reabertura."
+
+  8. >>> voltar ao PAINEL, em "Todos os pontos" <<<
+
+     "Sessenta por cento agora - a coleta reprovada entrou na conta - e as
+      pendencias voltaram a tres. Coleta, ocorrencia, tratativa e painel: e isso
+      que fecha o intervalo entre detectar e agir."
+
+  NUMEROS ESPERADOS no passo 8: 60,0% (6 de 10 analises), 3 pendencias.
+
+--------------------------------------------------------------------------------
+  BLOCO 4 - VICTOR - 3:50 a 4:40 - Testes, cobertura e resultados
+--------------------------------------------------------------------------------
+
+  TELA: terminal com a saida do ./mvnw clean verify, depois o relatorio JaCoCo.
+
+  "Tudo isso e verificado automaticamente. Um comando - mvnw clean verify -
+   roda 205 testes de backend em quatro niveis: dominio, servicos, a API e
+   integracao com MongoDB real. A cobertura e de 99 por cento das linhas, e o
+   build reprova se ficar abaixo de 70."
+
+  TELA: aba do GitHub Actions, com os tres jobs verdes.
+
+  "No frontend, mais 67 testes, e quatro cenarios end-to-end que abrem um
+   navegador e fazem exatamente o que acabamos de mostrar, contra o jar
+   empacotado. A cada pull request, os tres rodam na integracao continua."
+
+  TELA: quadro de tarefas.
+
+  "O trabalho foi organizado num quadro de tarefas, com uma issue por
+   entrega de cada integrante e cada pull request revisado por outro.
+
+   O resultado: um sistema que aplica a Portaria 888 sem criterio inventado,
+   abre a ocorrencia sozinho no momento em que a coleta reprova, aponta o
+   ponto que ficou sem coleta e mostra a tendencia antes do desvio. Obrigado."
 
 --------------------------------------------------------------------------------
   DISTRIBUICAO DO TEMPO
 --------------------------------------------------------------------------------
 
-  Bloco   Quem        Tempo    Item do edital
+  Bloco   Quem        Tempo    Itens do edital
   -----   ---------   ------   ------------------------------------------
-    1     Victor      1:05     Evolucao da solucao
-    2     Bruno       1:10     Documentacao tecnica / modelagem
-    3     Leonardo    1:55     Solucao funcionando
+    1     Victor      1:10     [1] evolucao, [2] projeto final, [4] tecnologias
+    2     Bruno       1:00     [2] projeto final (banco)
+    3     Leonardo    1:40     [3] demonstracao
+    4     Victor      0:50     [5] testes e cobertura, [6] resultados
                       -----
-                      4:10
+                      4:40
 
 --------------------------------------------------------------------------------
   ORDEM DE CORTE, se estourar os 5 minutos
 --------------------------------------------------------------------------------
 
-    1. O passo 10 (aba do Swagger).
-    2. O passo 3 (tratativa na ocorrencia que ja existia) — o passo 8 ja
-       mostra o ciclo se fechando.
-    3. A passagem pelo Mongo Express no Bloco 2.
+    1. O passo 6 do Bloco 3 (abrir na fila) - ir direto ao encerramento.
+    2. A tratativa do passo 7 - so encerrar.
+    3. O paragrafo do defeito do Docker no Bloco 2 (doi cortar: e o que mostra
+       metodologia, nao so funcionalidade).
 
   NAO CORTE, em hipotese alguma:
-    - A mencao ao ODS 6 e a Portaria 888/2021 (Bloco 1)
-    - O indice unico e o teste que estava sendo pulado (Bloco 2) -- e o que
-      mostra metodologia, nao so funcionalidade
-    - Os passos 4 a 7 do Bloco 3: registrar a coleta contaminada e a ocorrencia
-      sendo aberta sozinha. E a prova de que a solucao funciona.
+    - ODS 6 e a Portaria 888/2021 (Bloco 1)
+    - O slide de arquitetura e tecnologias (Bloco 1) - item do edital
+    - Coletas vencidas e serie historica (Bloco 3, passos 1 e 2) - sao a
+      evolucao desta entrega
+    - Registrar a coleta contaminada e a ocorrencia abrindo sozinha (Bloco 3,
+      passos 3 a 5)
+    - O Bloco 4 inteiro - testes, cobertura e resultados sao itens do edital
 
 --------------------------------------------------------------------------------
   DEPOIS DE GRAVAR
@@ -178,9 +242,10 @@
 
   [ ] Editar para ficar entre 3:00 e 5:00
   [ ] Subir no YouTube como NAO LISTADO
-  [ ] Colar o link no README, na secao Identificacao, e no Modelo de Entrega
-  [ ] Conferir o audio dos tres blocos no mesmo volume
+  [ ] Colar o link no README (secao Identificacao, coluna da 2a entrega) e no
+      Modelo de Entrega
+  [ ] Conferir o audio dos blocos no mesmo volume
   [ ] Conferir que nenhum dado pessoal aparece na tela
-  [ ] Criar a tag da entrega e conferir que a CI esta verde nela
+  [ ] Com a CI verde no main, criar a tag v2.0-entrega2 e a release
 
-  Ultima atualizacao: 10/09/2026
+  Ultima atualizacao: 12/11/2026
