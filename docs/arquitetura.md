@@ -3,14 +3,20 @@
 ## Camadas
 
 ```
+frontend/     React + TypeScript — fala com o backend só pela API REST
+  └── HTTP ↓
 api/          Controllers REST, DTOs e tradução de erros para HTTP
   └── depende de ↓
 servico/      Casos de uso, orquestração e regras de aplicação
   └── depende de ↓
-repositorio/  Interfaces Spring Data MongoDB
+repositorio/  Interfaces Spring Data MongoDB e a agregação da série histórica
 dominio/      Entidades, objetos de valor e regras de negócio
-config/       Beans de infraestrutura e carga de demonstração
+config/       Beans de infraestrutura, rotas da SPA e carga de demonstração
 ```
+
+O frontend é empacotado dentro do mesmo jar (perfil `-Pfrontend`) e servido pelo
+Spring na mesma origem da API; `RotasSpaConfig` devolve o `index.html` para as rotas
+da interface, para que um F5 em `/ocorrencias` não vire 404.
 
 A dependência aponta sempre para dentro. O pacote `dominio` **não importa nada
 do Spring** — nem anotação de injeção, nem `@Component`. Só usa
@@ -71,11 +77,29 @@ ocorrência da fila de não-iniciadas.
 autorize, então não existe caminho no código para resolver duas vezes a mesma
 ocorrência nem para reabrir uma resolvida.
 
+### Enum com comportamento — `TipoFonte`
+
+Cada tipo de fonte declara, no próprio construtor da constante, a frequência mínima
+de coleta, e sabe calcular até quando a próxima coleta precisa acontecer
+(`proximaColetaAte`). A alternativa — um mapa `TipoFonte → Duration` num serviço —
+deixaria possível esquecer um tipo novo; no enum, o compilador obriga cada constante a
+declarar a sua.
+
 ### Objetos de valor imutáveis
 
 `ResultadoParametro`, `Localizacao`, `Responsavel`, `ParametroViolado`,
 `Tratativa` e `ResultadoAnalise` são `record` com validação no construtor
-compacto. Não existe instância inválida desses tipos em memória.
+compacto. Não existe instância inválida desses tipos em memória. `SituacaoColeta`,
+`SerieHistorica` e `LeituraDiaria` são `record` de leitura, que levam os resultados
+dos serviços até o JSON sem estado mutável no caminho.
+
+### Fragmento de repositório — `AnaliseRepositoryCustom`
+
+A série histórica é uma agregação, que não cabe em método derivado do Spring Data.
+Em vez de um serviço receber `MongoTemplate` e misturar orquestração com BSON, a
+agregação fica num fragmento (`AnaliseRepositoryCustom` + `AnaliseRepositoryCustomImpl`)
+que o `AnaliseRepository` estende. Para quem usa, é mais um método do repositório —
+e o serviço continua testável com o repositório simulado.
 
 ### Agregados fechados
 
@@ -105,12 +129,41 @@ POST /api/analises
          OcorrenciaRepository.save()
 ```
 
+### Alerta de coleta vencida
+
+```
+GET /api/painel/coletas
+   │
+   └─ MonitoramentoColetaService.situacaoDosPontosAtivos()
+         para cada ponto ativo:
+           AnaliseRepository.findFirstByPontoIdOrderByColetadoEmDesc()  ← índice composto
+           TipoFonte.proximaColetaAte(ultimaColeta)
+           vencida = agora > limite   (ponto sem coleta: vencido)
+         ordena: nunca coletados, depois os mais atrasados, depois os em dia
+```
+
+### Série histórica
+
+```
+GET /api/painel/serie/{codigo}?parametro=&inicio=&fim=
+   │
+   ├─ CatalogoParametros.buscar(parametro)        → 422 se fora do catálogo
+   ├─ PontoMonitoramentoService.buscarPorCodigo() → 404 se não existe
+   ├─ período: padrão de 90 dias até agora        → 400 se invertido
+   │
+   └─ AnaliseRepository.serieDiaria()             → pipeline de agregação no MongoDB
+```
+
+O pipeline está documentado em [modelagem-nosql.md](modelagem-nosql.md#agregação--série-histórica-por-parâmetro).
+
 ## Injeção de `Clock`
 
-`PainelConformidadeService` recebe um `java.time.Clock` em vez de chamar
-`Instant.now()`. O cálculo de ocorrências vencidas depende do instante atual, e
-sem relógio injetável esse trecho seria intestável — o teste teria de esperar 24
-horas ou aceitar não cobri-lo. Com `Clock.fixed()`, o cenário é determinístico.
+`PainelConformidadeService`, `MonitoramentoColetaService` e `SerieHistoricaService`
+recebem um `java.time.Clock` em vez de chamar `Instant.now()`. Prazo vencido, coleta
+vencida e o período padrão da série dependem do instante atual, e sem relógio injetável
+esses trechos seriam intestáveis — o teste teria de esperar dias ou aceitar não
+cobri-los. Com `Clock.fixed()`, cada cenário é determinístico, inclusive o limite
+exato ("vence no instante seguinte ao prazo, e não no próprio prazo").
 
 ## Tradução de erros
 
@@ -123,16 +176,30 @@ precisa saber qual status HTTP corresponde a qual falha.
 | `RegraNegocioException` | 409 | Ponto desativado, código duplicado, transição inválida |
 | `ParametroDesconhecidoException` | 422 | Código fora do catálogo da norma |
 | `MethodArgumentNotValidException` | 400 | Falha de validação do corpo da requisição |
+| `IllegalArgumentException` | 400 | Invariante violada, como período com início depois do fim |
 
 ## Estratégia de testes
 
 | Nível | Ferramenta | O que cobre |
 |---|---|---|
-| Unidade — domínio | JUnit 5 + AssertJ | Limites da norma, invariantes, ciclo de vida |
-| Unidade — aplicação | Mockito | Orquestração dos serviços, tradução de exceções |
+| Unidade — domínio | JUnit 5 + AssertJ | Limites da norma, invariantes, ciclo de vida, frequência por tipo de fonte |
+| Unidade — aplicação | Mockito | Orquestração dos serviços, coleta vencida, período da série, tradução de exceções |
 | Web | MockMvc | Contratos HTTP e formato do JSON |
-| Integração | Testcontainers + MongoDB 7 | Round-trip dos subdocumentos e consultas derivadas |
+| Integração | Testcontainers + MongoDB 7 | Round-trip dos subdocumentos, consultas derivadas, índices e o pipeline de agregação |
+| Frontend | Vitest + Testing Library + MSW | Cliente da API, erros, formatos, prévia de conformidade, escala do gráfico e as telas com HTTP simulado |
+| End-to-end | Playwright | O fluxo da demonstração num navegador, contra o jar empacotado e um MongoDB real |
 
 Os testes de integração são ignorados automaticamente em máquina sem Docker
 (`@Testcontainers(disabledWithoutDocker = true)`). A cobertura mínima exigida é
-sustentada pelos testes de unidade, que não dependem de infraestrutura nenhuma.
+sustentada pelos testes de unidade, que não dependem de infraestrutura nenhuma — mas
+a CI reprova o build se a suíte de integração tiver sido pulada, porque foi assim que
+um defeito real passou despercebido.
+
+### Por que o frontend testa lógica, e não layout
+
+A cobertura do frontend é medida só em `src/api` e `src/dominio`, onde a falha é
+silenciosa: um erro da API que vira mensagem genérica, uma data convertida no fuso
+errado, um ponto do gráfico na posição errada. Layout aparece na primeira vez que
+alguém abre a tela; snapshot de JSX ensinaria a equipe a atualizar o snapshot por
+reflexo. As telas são exercitadas pelos testes com HTTP simulado e pelos cenários
+end-to-end.
