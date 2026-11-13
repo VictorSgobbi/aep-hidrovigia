@@ -25,7 +25,7 @@ esbarraria no limite de 16 MB por documento do MongoDB.
   "_id": ObjectId("..."),
   "codigo": "PMA-001",
   "nome": "Poco da Escola Rural Sao Jose",
-  "tipoFonte": "POCO_ARTESIANO",
+  "tipoFonte": "POCO_ARTESIANO",              // define a frequência mínima de coleta
   "populacaoAtendida": 320,
   "localizacao": {
     "municipio": "Maringa",
@@ -100,7 +100,19 @@ Desnormalização deliberada. A tela de ocorrências precisa mostrar o código d
 ponto, e repetir 7 caracteres evita uma consulta extra a cada linha da lista.
 O código do ponto é imutável, então não há risco de divergência.
 
-**Índices:** `pontoId` e `coletadoEm`.
+**Índices:** composto `{ pontoId: 1, coletadoEm: -1 }` e simples em `coletadoEm`.
+
+O composto atende a consulta mais frequente — o histórico de um ponto, da coleta mais
+recente para a mais antiga — sem ordenar em memória. A última coleta de um ponto, que o
+alerta de coleta vencida busca para cada ponto ativo
+(`findFirstByPontoIdOrderByColetadoEmDesc`), é o primeiro item desse índice. Pelo
+prefixo, ele também serve as contagens por ponto (`countByPontoId...`), por isso
+`pontoId` não tem índice próprio. `coletadoEm` mantém o simples porque a listagem por
+período não filtra por ponto.
+
+**Valor medido gravado como texto.** O Spring Data persiste `BigDecimal` como string
+(`"valor": "14"`), o que preserva as casas decimais exatamente como foram medidas. O
+custo aparece na agregação, que precisa converter antes de comparar — ver abaixo.
 
 ## `ocorrencias`
 
@@ -164,10 +176,55 @@ convenção: `OcorrenciaRepository.findByAnaliseId` devolve `Optional`, então d
 ocorrências para a mesma análise fariam a consulta falhar. O serviço checa antes
 e responde `409`; o índice cobre o caso de duas requisições concorrentes.
 
-## Evolução prevista para a 2ª entrega
+## Agregação — série histórica por parâmetro
 
-- Agregações do MongoDB (`$group`, `$bucket`) para a série histórica por parâmetro
-- Índice composto `{ pontoId: 1, coletadoEm: -1 }` para a consulta mais frequente
-- Índice TTL opcional em ocorrências resolvidas há mais de N anos
-- Coleção `frequencias_minimas` com a periodicidade de coleta exigida por tipo de
-  fonte, para alertar análise vencida
+A série histórica de um parâmetro num ponto é calculada pelo próprio MongoDB, em
+`AnaliseRepositoryCustomImpl`. O pipeline é escrito em documentos BSON, na mesma forma
+em que se escreveria no shell:
+
+```js
+db.analises.aggregate([
+  { $match: { pontoId: "68b...",
+              coletadoEm: { $gte: ISODate("2026-08-14"), $lte: ISODate("2026-11-12") } } },
+  { $unwind: "$parametros" },
+  { $match: { "parametros.codigo": "CRL" } },
+  { $group: {
+      _id: { $dateTrunc: { date: "$coletadoEm", unit: "day" } },
+      minimo: { $min: { $toDecimal: "$parametros.valor" } },
+      media:  { $avg: { $toDecimal: "$parametros.valor" } },
+      maximo: { $max: { $toDecimal: "$parametros.valor" } },
+      leituras: { $sum: 1 },
+      foraDoLimite: { $sum: { $cond: ["$parametros.conforme", 0, 1] } }
+  } },
+  { $sort: { _id: 1 } }
+])
+```
+
+| Estágio | Por quê |
+|---|---|
+| `$match` primeiro | Filtra por ponto e período **antes** de desdobrar o array, usando o índice composto |
+| `$unwind` | Transforma o array `parametros` em um documento por leitura |
+| `$match` pelo código | Só depois do `$unwind` dá para filtrar um parâmetro dentro do array |
+| `$toDecimal` | O valor é gravado como texto; comparado como texto, `"10.5"` seria menor que `"9.0"` |
+| `$dateTrunc` | Agrupa por dia (UTC), não por instante de coleta |
+| `foraDoLimite` | Usa o veredito **gravado** em cada leitura (`parametros.conforme`), que aplicou o limite em vigor na data da coleta |
+
+O teste de integração `RepositoriosMongoIntegracaoTest.agregaSerieDiaria` roda esse
+pipeline contra um MongoDB 7 real (Testcontainers) e cobre justamente o caso de
+`"10.5"` e `"9.0"` no mesmo dia.
+
+## O que mudou na 2ª entrega
+
+| Item | Situação |
+|---|---|
+| Índice composto `{ pontoId: 1, coletadoEm: -1 }` | ✅ Entregue — substituiu o índice simples de `pontoId` |
+| Agregação para a série histórica | ✅ Entregue — `$group` por dia; o `$bucket` previsto não foi necessário, porque o gráfico pede faixas de tempo, não de valor |
+| Frequência mínima de coleta por tipo de fonte | ✅ Entregue como atributo do enum `TipoFonte`, **não** como a coleção `frequencias_minimas` prevista — ver abaixo |
+| Índice TTL em ocorrências resolvidas | ⏸ Fora do escopo — arquivar histórico de vigilância é decisão de política de retenção, não de PoC |
+
+**Por que a frequência mínima ficou no enum, e não numa coleção.** A frequência é
+uma regra da norma associada ao tipo de fonte, e não muda em tempo de execução. Numa
+coleção, ela exigiria carga inicial, uma consulta a mais por cálculo e um caminho de
+erro para "tipo de fonte sem frequência cadastrada" — que no enum é impossível, porque
+o compilador obriga cada constante a declarar a sua. A coleção passaria a valer a pena
+se a frequência fosse configurável por município, o que a PoC não faz.
