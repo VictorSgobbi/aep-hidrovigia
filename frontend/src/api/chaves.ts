@@ -27,5 +27,7 @@ export const chaves = {
   painel: (escopo = 'geral') => ['painel', escopo] as const,
   /** Sob o prefixo do painel: registrar coleta ou ponto já invalida as duas. */
   situacaoColetas: () => ['painel', 'situacao-coletas'] as const,
+  serie: (codigoPonto: string, parametro: string) =>
+    ['painel', 'serie', codigoPonto, parametro] as const,
   catalogo: () => ['catalogo'] as const,
 }

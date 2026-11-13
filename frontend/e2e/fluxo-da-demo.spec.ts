@@ -144,6 +144,23 @@ test('o painel mostra o alerta de coleta vencida servido pela API', async ({
   ).toBeVisible()
 })
 
+test('escolher um ponto no painel desenha a serie historica agregada no banco', async ({
+  page,
+}) => {
+  await page.goto('/painel')
+  await page.getByLabel('Escopo').selectOption('PMA-001')
+
+  const bloco = page.getByRole('region', { name: 'Série histórica de PMA-001' })
+  await expect(bloco).toBeVisible()
+  // PMA-001 tem coletas de cloro em toda carga de demonstracao, entao o
+  // grafico aparece; o texto da legenda prova que a agregacao respondeu.
+  await expect(bloco.getByRole('img', { name: /Cloro residual livre/ })).toBeVisible()
+  await expect(bloco.getByText(/dias? com coleta/)).toBeVisible()
+
+  await bloco.getByLabel('Parâmetro').selectOption('PH')
+  await expect(bloco.getByRole('img', { name: /pH/ })).toBeVisible()
+})
+
 test('um refresh numa rota da interface carrega a aplicacao, e nao um 404', async ({
   page,
 }) => {

@@ -193,6 +193,31 @@ export interface SituacaoColeta {
   vencida: boolean
 }
 
+/** Resumo das leituras de um parâmetro num dia (UTC), calculado no MongoDB. */
+export interface LeituraDiaria {
+  /** `AAAA-MM-DD`, sem hora. */
+  dia: string
+  minimo: number
+  media: number
+  maximo: number
+  leituras: number
+  /** Leituras reprovadas no dia, pelo limite gravado em cada análise. */
+  foraDoLimite: number
+}
+
+export interface SerieHistorica {
+  codigoPonto: string
+  codigoParametro: string
+  nomeParametro: string
+  unidade: string
+  limiteMinimo?: number | undefined
+  limiteMaximo?: number | undefined
+  inicio: Instante
+  fim: Instante
+  /** Em ordem cronológica; dias sem coleta não aparecem. */
+  dias: LeituraDiaria[]
+}
+
 export interface ParametroCatalogado {
   codigo: string
   nome: string
